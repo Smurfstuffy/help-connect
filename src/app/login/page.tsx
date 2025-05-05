@@ -107,7 +107,7 @@ export default function LoginPage() {
                 {form.formState.errors.root.message}
               </p>
             )}
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full cursor-pointer">
               Sign in
             </Button>
           </form>

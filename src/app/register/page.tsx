@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const {data, error} = await supabase.auth.signUp({
+      const {error} = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -48,7 +48,7 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push('/login?message=Check your email to confirm your account');
+      router.push('/confirm');
     } catch {
       form.setError('root', {
         message: 'An unexpected error occurred',
@@ -110,7 +110,7 @@ export default function RegisterPage() {
                 {form.formState.errors.root.message}
               </p>
             )}
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full cursor-pointer">
               Create account
             </Button>
           </form>
