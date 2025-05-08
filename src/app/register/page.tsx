@@ -10,30 +10,37 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import {Input} from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {useForm} from 'react-hook-form';
 import * as z from 'zod';
 import {supabase} from '@/lib/supabase';
 import {useRouter} from 'next/navigation';
-
-const formSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
+import {formSchema, UserRole} from '../../types/app/register';
+import {createUser} from '@/actions/user/create';
 
 export default function RegisterPage() {
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: '',
+      surname: '',
       email: '',
       password: '',
+      role: UserRole.USER,
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const {error} = await supabase.auth.signUp({
+      const {data, error} = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -48,7 +55,17 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push('/confirm');
+      if (data.user) {
+        // Create user profile
+        await createUser({
+          id: data.user.id,
+          name: values.name,
+          surname: values.surname,
+          role: values.role,
+        });
+      }
+
+      router.push('/');
     } catch {
       form.setError('root', {
         message: 'An unexpected error occurred',
@@ -77,6 +94,32 @@ export default function RegisterPage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
+              name="name"
+              render={({field}) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="surname"
+              render={({field}) => (
+                <FormItem>
+                  <FormLabel>Surname</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your surname" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="email"
               render={({field}) => (
                 <FormItem>
@@ -101,6 +144,32 @@ export default function RegisterPage() {
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({field}) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={UserRole.USER}>User</SelectItem>
+                      <SelectItem value={UserRole.VOLUNTEER}>
+                        Volunteer
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

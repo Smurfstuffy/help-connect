@@ -15,11 +15,7 @@ import {useForm} from 'react-hook-form';
 import * as z from 'zod';
 import {supabase} from '@/lib/supabase';
 import {useRouter} from 'next/navigation';
-
-const formSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
+import {formSchema} from '../../types/app/login';
 
 export default function LoginPage() {
   const router = useRouter();

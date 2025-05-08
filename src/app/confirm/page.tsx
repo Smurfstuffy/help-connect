@@ -1,7 +1,41 @@
 'use client';
 import Link from 'next/link';
+import {useEffect} from 'react';
+import {useRouter} from 'next/navigation';
+import {supabase} from '@/lib/supabase';
+import {createUser} from '@/actions/user/create';
 
 export default function ConfirmPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const createUserProfile = async () => {
+      try {
+        // Get the current session
+        const {
+          data: {session},
+        } = await supabase.auth.getSession();
+
+        if (session?.user) {
+          // Get user metadata
+          const metadata = session.user.user_metadata;
+
+          // Create user profile using server action
+          await createUser({
+            id: session.user.id,
+            name: metadata.name,
+            surname: metadata.surname,
+            role: metadata.role,
+          });
+        }
+      } catch (error) {
+        console.error('Error in profile creation:', error);
+      }
+    };
+
+    createUserProfile();
+  }, [router]);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 text-center">
