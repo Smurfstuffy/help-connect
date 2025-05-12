@@ -3,9 +3,38 @@ import {Button} from '@/components/ui/button';
 import {supabase} from '@/lib/supabase';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
+import {useEffect, useState} from 'react';
+import {Tables} from '@/types/supabase/database.types';
+import axios from 'axios';
+
+type UserProfile = Tables<'user_profiles'>;
 
 export default function AuthLayout({children}: {children: React.ReactNode}) {
   const router = useRouter();
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: {user: authUser},
+      } = await supabase.auth.getUser();
+      if (authUser) {
+        try {
+          const {data: result} = await axios.get(
+            `/api/user-profile/${authUser.id}`,
+          );
+          if (result.success) {
+            setUser(result.data);
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
@@ -22,16 +51,16 @@ export default function AuthLayout({children}: {children: React.ReactNode}) {
                   Help Connect
                 </Link>
               </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+            </div>
+            <div className="flex items-center space-x-4">
+              {user && (
                 <Link
-                  href="/"
+                  href="/settings"
                   className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-md font-medium"
                 >
-                  Home
+                  {user.name} {user.surname}
                 </Link>
-              </div>
-            </div>
-            <div className="flex">
+              )}
               <Button className="cursor-pointer" onClick={handleLogout}>
                 Logout
               </Button>

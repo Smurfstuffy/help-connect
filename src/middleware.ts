@@ -4,7 +4,7 @@ import type {NextRequest} from 'next/server';
 const SESSION_COOKIE = `sb-${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF}-auth-token`;
 
 const PROTECTED_PATHS = ['/', '/home'];
-const UNPROTECTED_PATHS = ['/login', '/register'];
+const UNPROTECTED_PATHS = ['/login', '/register', '/confirm'];
 
 export function middleware(request: NextRequest) {
   const {pathname} = request.nextUrl;

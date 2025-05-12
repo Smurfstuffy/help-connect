@@ -23,7 +23,7 @@ import * as z from 'zod';
 import {supabase} from '@/lib/supabase';
 import {useRouter} from 'next/navigation';
 import {formSchema, UserRole} from '../../types/app/register';
-import {createUser} from '@/actions/user/create';
+import axios from 'axios';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -57,7 +57,7 @@ export default function RegisterPage() {
 
       if (data.user) {
         // Create user profile
-        await createUser({
+        await axios.post('/api/create-profile', {
           id: data.user.id,
           name: values.name,
           surname: values.surname,
@@ -65,7 +65,7 @@ export default function RegisterPage() {
         });
       }
 
-      router.push('/');
+      router.push('/confirm');
     } catch {
       form.setError('root', {
         message: 'An unexpected error occurred',
