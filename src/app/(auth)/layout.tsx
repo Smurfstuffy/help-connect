@@ -3,25 +3,14 @@ import {Button} from '@/components/ui/button';
 import {supabase} from '@/lib/supabase';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {useEffect, useState} from 'react';
 import {useFetchUserQuery} from '@/hooks/queries/useFetchUserQuery';
+import {useAuth} from '@/hooks/useAuth';
 
 export default function AuthLayout({children}: {children: React.ReactNode}) {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: {user},
-      } = await supabase.auth.getUser();
-      setUserId(user?.id ?? null);
-    };
-    getUser();
-  }, []);
+  const {userId} = useAuth();
 
   const {data: user} = useFetchUserQuery(userId ?? '');
-  console.log(user);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

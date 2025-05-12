@@ -1,9 +1,6 @@
 import {getUserById} from '@/services/supabase/user/get';
 import {NextRequest, NextResponse} from 'next/server';
-import {Tables} from '@/types/supabase/database.types';
-import {ApiResponse} from '@/types/app/api';
-
-type UserProfile = Tables<'user_profiles'>;
+import {ApiResponse, UserProfile} from '@/types/app/api';
 
 export async function GET(
   req: NextRequest,

@@ -1,9 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {createUser} from '@/services/supabase/user/create';
-import {Tables} from '@/types/supabase/database.types';
-import {ApiResponse} from '@/types/app/api';
-
-type UserProfile = Tables<'user_profiles'>;
+import {ApiResponse, UserProfile} from '@/types/app/api';
 
 export async function POST(
   req: NextRequest,
