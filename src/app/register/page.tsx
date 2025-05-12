@@ -23,7 +23,7 @@ import * as z from 'zod';
 import {supabase} from '@/lib/supabase';
 import {useRouter} from 'next/navigation';
 import {formSchema, UserRole} from '../../types/app/register';
-import axios from 'axios';
+import {useCreateUserMutation} from '@/hooks/queries/useCreateUserMutation';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -37,6 +37,8 @@ export default function RegisterPage() {
       role: UserRole.USER,
     },
   });
+
+  const createUserMutation = useCreateUserMutation();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -56,8 +58,8 @@ export default function RegisterPage() {
       }
 
       if (data.user) {
-        // Create user profile
-        await axios.post('/api/create-profile', {
+        // Create user profile using mutation
+        await createUserMutation.mutateAsync({
           id: data.user.id,
           name: values.name,
           surname: values.surname,

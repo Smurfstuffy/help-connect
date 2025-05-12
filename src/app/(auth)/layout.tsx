@@ -4,36 +4,24 @@ import {supabase} from '@/lib/supabase';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {useEffect, useState} from 'react';
-import {Tables} from '@/types/supabase/database.types';
-import axios from 'axios';
-
-type UserProfile = Tables<'user_profiles'>;
+import {useFetchUserQuery} from '@/hooks/queries/useFetchUserQuery';
 
 export default function AuthLayout({children}: {children: React.ReactNode}) {
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const getUser = async () => {
       const {
-        data: {user: authUser},
+        data: {user},
       } = await supabase.auth.getUser();
-      if (authUser) {
-        try {
-          const {data: result} = await axios.get(
-            `/api/user-profile/${authUser.id}`,
-          );
-          if (result.success) {
-            setUser(result.data);
-          }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-        }
-      }
+      setUserId(user?.id ?? null);
     };
-
-    fetchUser();
+    getUser();
   }, []);
+
+  const {data: user} = useFetchUserQuery(userId ?? '');
+  console.log(user);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

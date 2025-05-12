@@ -1,14 +1,9 @@
-import {getUserById} from '@/actions/user/get';
+import {getUserById} from '@/services/supabase/user/get';
 import {NextRequest, NextResponse} from 'next/server';
 import {Tables} from '@/types/supabase/database.types';
+import {ApiResponse} from '@/types/app/api';
 
 type UserProfile = Tables<'user_profiles'>;
-
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
 
 export async function GET(
   req: NextRequest,

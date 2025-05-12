@@ -1,13 +1,13 @@
 'use server';
 
-import {supabase} from '@/lib/supabase';
 import {Tables} from '@/types/supabase/database.types';
+import {supabaseAdmin} from '../supabaseAdmin';
 
 export type UserProfile = Tables<'user_profiles'>;
 
 export async function getUserById(id: string): Promise<UserProfile | null> {
   try {
-    const {data, error} = await supabase
+    const {data, error} = await supabaseAdmin
       .from('user_profiles')
       .select('*')
       .eq('id', id)
