@@ -18,7 +18,7 @@ export default function AuthLayout({children}: {children: React.ReactNode}) {
   };
 
   return (
-    <div>
+    <div className="h-screen flex flex-col">
       <nav className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between py-4">
@@ -45,7 +45,7 @@ export default function AuthLayout({children}: {children: React.ReactNode}) {
           </div>
         </div>
       </nav>
-      <main>{children}</main>
+      <main className="flex-1">{children}</main>
     </div>
   );
 }
