@@ -103,8 +103,12 @@ export default function LoginPage() {
                 {form.formState.errors.root.message}
               </p>
             )}
-            <Button type="submit" className="w-full cursor-pointer">
-              Sign in
+            <Button
+              type="submit"
+              className="w-full cursor-pointer"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
         </Form>

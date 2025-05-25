@@ -7,3 +7,4 @@ export interface ApiResponse<T> {
 }
 
 export type UserProfile = Tables<'user_profiles'>;
+export type HelpRequest = Tables<'help_requests'>;
