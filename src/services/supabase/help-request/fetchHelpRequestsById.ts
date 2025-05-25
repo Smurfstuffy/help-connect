@@ -1,25 +1,26 @@
 'use server';
 
-import {Tables} from '@/types/supabase/database.types';
 import {supabaseAdmin} from '../supabaseAdmin';
+import {HelpRequest} from './fetch';
 
-export type HelpRequest = Tables<'help_requests'>;
-
-export async function getHelpRequest(): Promise<HelpRequest[] | null> {
+export async function fetchHelpRequestsByUserId(
+  userId: string,
+): Promise<HelpRequest[] | null> {
   try {
     const {data, error} = await supabaseAdmin
       .from('help_requests')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', {ascending: true});
 
     if (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Error fetching help requests by user id:', error);
       throw new Error(error.message);
     }
 
     return data;
   } catch (error) {
-    console.error('Unexpected error fetching user:', error);
+    console.error('Unexpected error fetching help requests by user id:', error);
     throw error;
   }
 }
