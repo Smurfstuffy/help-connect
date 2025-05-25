@@ -16,8 +16,10 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import {RequestFormValues, requestSchema} from '@/types/app/components/dialog';
 import {useCreateHelpRequestMutation} from '@/hooks/queries/help-requests/useCreateHelpRequestMutation';
 import {useAuth} from '@/hooks/useAuth';
+import {useState} from 'react';
 
 const RequestDialog = () => {
+  const [open, setOpen] = useState(false);
   const {
     register,
     handleSubmit,
@@ -26,15 +28,15 @@ const RequestDialog = () => {
     resolver: zodResolver(requestSchema),
   });
 
-  const {mutate: createHelpRequest} = useCreateHelpRequestMutation();
+  const {mutate: createHelpRequest, isPending} = useCreateHelpRequestMutation();
   const {userId} = useAuth();
 
   const onSubmit = (data: RequestFormValues) => {
-    console.log(data);
     createHelpRequest({...data, user_id: userId});
+    setOpen(false);
   };
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
         <Button asChild>
           <span className="cursor-pointer">Create Request</span>
@@ -89,8 +91,12 @@ const RequestDialog = () => {
               )}
             </div>
           </div>
-          <Button type="submit" className="mt-4 cursor-pointer">
-            Submit
+          <Button
+            type="submit"
+            className="mt-4 cursor-pointer"
+            disabled={isPending}
+          >
+            {isPending ? 'Submitting...' : 'Submit'}
           </Button>
         </form>
       </DialogContent>
