@@ -1,5 +1,5 @@
 import {useMutation, useQueryClient} from '@tanstack/react-query';
-import {editUser} from '@/services/api/editUser';
+import {editUser} from '@/services/axios/user-profiles/editUser';
 import {UserUpdate} from '@/services/supabase/user/edit';
 
 export const useEditUserMutation = () => {

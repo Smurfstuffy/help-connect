@@ -181,8 +181,14 @@ export default function RegisterPage() {
                 {form.formState.errors.root.message}
               </p>
             )}
-            <Button type="submit" className="w-full cursor-pointer">
-              Create account
+            <Button
+              type="submit"
+              className="w-full cursor-pointer"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting
+                ? 'Creating account...'
+                : 'Create account'}
             </Button>
           </form>
         </Form>

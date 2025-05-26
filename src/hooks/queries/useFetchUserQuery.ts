@@ -1,5 +1,5 @@
 import {useQuery} from '@tanstack/react-query';
-import {fetchUser} from '@/services/api/fetchUser';
+import {fetchUser} from '@/services/axios/user-profiles/fetchUser';
 
 export const useFetchUserQuery = (userId: string) => {
   return useQuery({
