@@ -21,9 +21,9 @@ import {useForm} from 'react-hook-form';
 import * as z from 'zod';
 import {formSchema} from '../../types/app/settings';
 import {UserRole} from '../../types/app/register';
-import {useFetchUserQuery} from '@/hooks/queries/useFetchUserQuery';
+import {useFetchUserQuery} from '@/hooks/queries/user-profiles/useFetchUserQuery';
 import {useAuth} from '@/hooks/useAuth';
-import {useEditUserMutation} from '@/hooks/queries/useEditUserMutation';
+import {useEditUserMutation} from '@/hooks/queries/user-profiles/useEditUserMutation';
 import {useRouter} from 'next/navigation';
 import {useEffect} from 'react';
 

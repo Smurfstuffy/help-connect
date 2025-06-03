@@ -23,7 +23,7 @@ import * as z from 'zod';
 import {supabase} from '@/lib/supabase';
 import {useRouter} from 'next/navigation';
 import {formSchema, UserRole} from '../../types/app/register';
-import {useCreateUserMutation} from '@/hooks/queries/useCreateUserMutation';
+import {useCreateUserMutation} from '@/hooks/queries/user-profiles/useCreateUserMutation';
 
 export default function RegisterPage() {
   const router = useRouter();

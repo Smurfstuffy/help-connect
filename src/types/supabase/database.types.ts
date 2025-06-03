@@ -14,18 +14,39 @@ export type Database = {
           created_at: string
           id: string
           name: string | null
+          user_id: string | null
+          volunteer_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name?: string | null
+          user_id?: string | null
+          volunteer_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string | null
+          user_id?: string | null
+          volunteer_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       help_requests: {
         Row: {

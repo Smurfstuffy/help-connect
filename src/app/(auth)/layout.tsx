@@ -3,7 +3,7 @@ import {Button} from '@/components/ui/button';
 import {supabase} from '@/lib/supabase';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {useFetchUserQuery} from '@/hooks/queries/useFetchUserQuery';
+import {useFetchUserQuery} from '@/hooks/queries/user-profiles/useFetchUserQuery';
 import {useAuth} from '@/hooks/useAuth';
 import {UserRole} from '@/types/app/register';
 

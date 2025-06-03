@@ -13,13 +13,13 @@ export async function getHelpRequest(): Promise<HelpRequest[] | null> {
       .order('created_at', {ascending: true});
 
     if (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Error fetching help requests:', error);
       throw new Error(error.message);
     }
 
     return data;
   } catch (error) {
-    console.error('Unexpected error fetching user:', error);
+    console.error('Unexpected error fetching help requests:', error);
     throw error;
   }
 }

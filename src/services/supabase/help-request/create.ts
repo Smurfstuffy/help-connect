@@ -12,13 +12,13 @@ export async function createHelpRequest(helpRequest: HelpRequestInsert) {
       .insert([helpRequest]);
 
     if (error) {
-      console.error('Error creating user profile:', error);
+      console.error('Error creating help request:', error);
       throw new Error(error.message);
     }
 
     return data;
   } catch (error) {
-    console.error('Unexpected error creating user:', error);
+    console.error('Unexpected error creating help request:', error);
     throw error;
   }
 }
