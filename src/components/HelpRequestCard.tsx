@@ -12,13 +12,15 @@ import {
 } from './ui/dialog';
 import {Button} from './ui/button';
 import {useState} from 'react';
-import {useFetchUserQuery} from '@/hooks/queries/useFetchUserQuery';
+import {useFetchUserQuery} from '@/hooks/queries/user-profiles/useFetchUserQuery';
 import HelpRequestStatus from './HelpRequestStatus';
 import {useAuth} from '@/hooks/useAuth';
 import {UserRole} from '@/types/app/register';
+import {useRouter} from 'next/navigation';
 import {useChangeClosedStatusMutation} from '@/hooks/queries/help-requests/useChangeClosedStatusMutation';
 
 const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const {data: user} = useFetchUserQuery(helpRequest.user_id ?? '');
   const {userId} = useAuth();
@@ -69,6 +71,7 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
               className="cursor-pointer bg-yellow-600 hover:bg-yellow-700"
               onClick={() => {
                 toggleClosedStatus(helpRequest.id);
+                router.push('./chats');
                 setOpen(false);
               }}
               disabled={isPending}
