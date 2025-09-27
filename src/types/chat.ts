@@ -97,3 +97,19 @@ export interface CreateConversationRequest {
   helpRequestId: string;
   volunteerId: string;
 }
+
+export interface ConversationWithUsers {
+  id: string;
+  user_id: string | null;
+  volunteer_id: string | null;
+  name: string | null;
+  created_at: string;
+  user_profiles: {
+    name: string | null;
+    surname: string | null;
+  } | null;
+  volunteer_profiles: {
+    name: string | null;
+    surname: string | null;
+  } | null;
+}
