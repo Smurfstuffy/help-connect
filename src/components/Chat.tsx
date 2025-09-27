@@ -1,126 +1,125 @@
 'use client';
-import {useEffect, useState} from 'react';
+import {useState, useRef, useEffect} from 'react';
 import {Button} from './ui/button';
 import {Card, CardContent, CardFooter, CardHeader, CardTitle} from './ui/card';
 import {ScrollArea} from './ui/scroll-area';
 import {Textarea} from './ui/textarea';
-import {supabase} from '@/lib/supabase';
-// import {useAuth} from '@/hooks/useAuth';
-//import {useFetchUserQuery} from '@/hooks/queries/user-profiles/useFetchUserQuery';
-// import {ChatMessage} from '@/types/app/api';
+import {useSupabaseChat} from '@/hooks/useSupabaseChat';
+import {useAuth} from '@/hooks/useAuth';
 
-interface testMessage {
-  sender: string;
-  text: string;
+interface ChatProps {
+  conversationId?: string;
 }
 
-const Chat = () => {
-  const [message, setMessage] = useState<testMessage>({
-    sender: 'receiver',
-    text: '',
-  });
-  const [tempConversation, setTempConversation] = useState<testMessage[]>([
-    {sender: 'sender', text: 'Hello, how are you doing?'},
-    {
-      sender: 'receiver',
-      text: 'I am doing fine, thank you for asking, and how are you doing?',
-    },
-    {
-      sender: 'sender',
-      text: 'Good. I can help you with your problem ,can you give me your phone number and we can talk about the details?',
-    },
-    {
-      sender: 'receiver',
-      text: 'Sure, my phone number is +380631234321. I am looking forward to hearing from you soon, Thank you for the response.',
-    },
-    {sender: 'sender', text: 'No problem. I will call you as soon as I can.'},
-    {sender: 'receiver', text: 'Thank you.'},
-  ]);
-  // const {userId} = useAuth();
-  // const {data: user} = useFetchUserQuery(userId ?? '');
-  // const [message, setMessage] = useState<string>('');
-  // const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const roomId = 'room1'; // hardcoded chat room/channel
+const Chat = ({conversationId = 'default-room'}: ChatProps) => {
+  const {userId} = useAuth();
+  const [message, setMessage] = useState('');
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
+  const {
+    messages,
+    isConnected,
+    isLoadingMessages,
+    onlineUsers,
+    sendMessage: sendChatMessage,
+  } = useSupabaseChat({conversationId});
+
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    const channel = supabase.channel(`chat-room-${roomId}`);
+    if (scrollAreaRef.current) {
+      const scrollElement = scrollAreaRef.current.querySelector(
+        '[data-radix-scroll-area-viewport]',
+      );
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+    }
+  }, [messages]);
 
-    // Listen for incoming messages from others
-    // channel
-    //   .on('broadcast', {event: 'new-message'}, ({payload}) => {
-    //     setMessages(prev => [...prev, payload as ChatMessage]);
-    //   })
-    //   .subscribe();
+  const handleSendMessage = () => {
+    if (!message.trim()) return;
 
-    return () => {
-      // Clean up when component unmounts
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    sendChatMessage(message);
+    setMessage('');
+  };
 
-  // const sendMessage = () => {
-  //   if (!message.trim()) return;
-
-  //   const newMessage: ChatMessage = {
-  //     text: message,
-  //     senderId: userId ?? '',
-  //     senderName: `${user?.name} ${user?.surname}`,
-  //     timestamp: new Date().toISOString(),
-  //   };
-
-  //   supabase.channel(`chat-room-${roomId}`).send({
-  //     type: 'broadcast',
-  //     event: 'new-message',
-  //     payload: newMessage,
-  //   });
-
-  //   setMessages(prev => [...prev, newMessage]); // optimistic UI update
-  //   setMessage('');
-  // };
-
-  const sendMessage = () => {
-    setTempConversation(prev => [...prev, message]);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
   return (
     <Card>
       <CardHeader className="justify-center">
-        <CardTitle>Chat</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          <span>Chat</span>
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                isConnected ? 'bg-green-500' : 'bg-red-500'
+              }`}
+            />
+            <span className="text-sm text-gray-500">
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </span>
+          </div>
+        </CardTitle>
+        {onlineUsers.length > 0 && (
+          <div className="text-sm text-gray-500">
+            {onlineUsers.length} user{onlineUsers.length !== 1 ? 's' : ''}{' '}
+            online
+          </div>
+        )}
       </CardHeader>
       <CardContent>
-        <ScrollArea>
-          {/* {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`mb-2 ${msg.senderId === userId ? 'text-right' : 'text-left'}`}
-            >
-              <span className="text-sm text-gray-500">{msg.senderName}</span>
-              <div className="bg-gray-100 inline-block px-3 py-1 rounded">
-                {msg.text}
-              </div>
+        <ScrollArea ref={scrollAreaRef} className="h-96">
+          {isLoadingMessages ? (
+            <div className="text-center text-gray-500 py-8">
+              Loading messages...
             </div>
-          ))} */}
-          {tempConversation.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex-wrap mb-2 ${msg.sender === 'receiver' ? 'text-right' : 'text-left'}`}
-            >
+          ) : messages.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              No messages yet. Start the conversation!
+            </div>
+          ) : (
+            messages.map((msg, i) => (
               <div
-                className={`${msg.sender === 'receiver' ? 'bg-blue-200' : 'bg-gray-200'} inline-block px-3 py-1 rounded max-w-2/5`}
+                key={msg.id || i}
+                className={`mb-2 ${msg.senderId === userId ? 'text-right' : 'text-left'}`}
               >
-                {msg.text}
+                <div className="text-xs text-gray-500 mb-1">
+                  {msg.senderName} •{' '}
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </div>
+                <div
+                  className={`inline-block px-3 py-2 rounded-lg max-w-xs ${
+                    msg.senderId === userId
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-800'
+                  }`}
+                >
+                  {msg.text}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </ScrollArea>
         <Textarea
           placeholder="Write a message..."
-          value={message.text}
-          onChange={e => setMessage({sender: 'receiver', text: e.target.value})}
+          value={message}
+          onChange={e => setMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          className="mt-4"
         />
       </CardContent>
       <CardFooter className="justify-center">
-        <Button className="w-full cursor-pointer" onClick={sendMessage}>
+        <Button
+          className="w-full cursor-pointer"
+          onClick={handleSendMessage}
+          disabled={!message.trim() || !isConnected}
+        >
           Send
         </Button>
       </CardFooter>
