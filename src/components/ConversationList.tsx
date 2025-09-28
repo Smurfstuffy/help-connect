@@ -16,57 +16,86 @@ const ConversationList = () => {
     error,
   } = useFetchConversationsQuery(userId ?? '', currentUser?.role ?? '');
 
-  if (isLoading) return <div className="p-4">Loading conversations...</div>;
-  if (error) return <div className="p-4">Error loading conversations</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-gray-600">Loading conversations...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-6xl mb-4">⚠️</div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Error loading conversations
+        </h3>
+        <p className="text-gray-500">Please try refreshing the page.</p>
+      </div>
+    );
+  }
+
   if (!conversations || conversations.length === 0) {
     return (
-      <div className="p-4">
-        <h2 className="text-xl font-semibold mb-4">Your Chats</h2>
-        <p className="text-gray-500">No conversations yet.</p>
+      <div className="text-center py-12">
+        <div className="text-6xl mb-4">💬</div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          No conversations yet
+        </h3>
+        <p className="text-gray-500">
+          Start a conversation by responding to a help request!
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Your Chats</h2>
-      <div className="space-y-4">
-        {conversations.map(conversation => {
-          // Determine the other participant's name
-          const otherParticipant =
-            currentUser?.role === UserRole.VOLUNTEER
-              ? conversation.user_profiles
-              : conversation.volunteer_profiles;
+    <div className="space-y-4">
+      {conversations.map((conversation, index) => {
+        // Determine the other participant's name
+        const otherParticipant =
+          currentUser?.role === UserRole.VOLUNTEER
+            ? conversation.user_profiles
+            : conversation.volunteer_profiles;
 
-          const otherParticipantName = otherParticipant
-            ? `${otherParticipant.name || ''} ${otherParticipant.surname || ''}`.trim()
-            : 'Unknown User';
+        const otherParticipantName = otherParticipant
+          ? `${otherParticipant.name || ''} ${otherParticipant.surname || ''}`.trim()
+          : 'Unknown User';
 
-          return (
-            <Link key={conversation.id} href={`/chats/${conversation.id}`}>
-              <Card className="cursor-pointer hover:bg-accent/90 transition-colors">
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    {conversation.name || `Chat with ${otherParticipantName}`}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600">
-                    {currentUser?.role === UserRole.VOLUNTEER
-                      ? 'Helping'
-                      : 'Getting help from'}
-                    : {otherParticipantName}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Started:{' '}
-                    {new Date(conversation.created_at).toLocaleDateString()}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
-      </div>
+        return (
+          <Link key={conversation.id} href={`/chats/${conversation.id}`}>
+            <Card
+              className="group cursor-pointer hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02] border-0 shadow-lg bg-white/80 backdrop-blur-sm animate-fade-in"
+              style={{animationDelay: `${index * 0.1}s`}}
+            >
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <span className="text-2xl">💬</span>
+                  {conversation.name || `Chat with ${otherParticipantName}`}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 flex items-center gap-2">
+                  <span className="text-lg">
+                    {currentUser?.role === UserRole.VOLUNTEER ? '🤝' : '🙋‍♀️'}
+                  </span>
+                  {currentUser?.role === UserRole.VOLUNTEER
+                    ? 'Helping'
+                    : 'Getting help from'}
+                  : {otherParticipantName}
+                </p>
+                <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                  <span>📅</span>
+                  Started:{' '}
+                  {new Date(conversation.created_at).toLocaleDateString()}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        );
+      })}
     </div>
   );
 };
