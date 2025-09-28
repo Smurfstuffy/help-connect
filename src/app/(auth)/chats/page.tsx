@@ -1,10 +1,9 @@
-import Chat from '@/components/Chat';
-//import ConversationList from '@/components/ConversationList';
+import ConversationList from '@/components/ConversationList';
 
 const ChatsPage = () => {
   return (
-    <div className="h-full flex justify-center items-center">
-      <Chat />
+    <div className="h-full">
+      <ConversationList />
     </div>
   );
 };

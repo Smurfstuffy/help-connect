@@ -16,17 +16,18 @@ import {useFetchUserQuery} from '@/hooks/queries/user-profiles/useFetchUserQuery
 import HelpRequestStatus from './HelpRequestStatus';
 import {useAuth} from '@/hooks/useAuth';
 import {UserRole} from '@/types/app/register';
-import {useRouter} from 'next/navigation';
 import {useChangeClosedStatusMutation} from '@/hooks/queries/help-requests/useChangeClosedStatusMutation';
+import {useCreateConversationFromRequestMutation} from '@/hooks/queries/conversations/useCreateConversationFromRequestMutation';
 
 const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const {data: user} = useFetchUserQuery(helpRequest.user_id ?? '');
   const {userId} = useAuth();
   const {data: currentUser} = useFetchUserQuery(userId ?? '');
   const {mutate: toggleClosedStatus, isPending} =
     useChangeClosedStatusMutation();
+  const {mutate: createConversation, isPending: isCreatingConversation} =
+    useCreateConversationFromRequestMutation();
 
   const isVolunteer = currentUser?.role === UserRole.VOLUNTEER;
 
@@ -66,18 +67,33 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
         </div>
         <DialogFooter className="gap-2">
           {isVolunteer && (
-            <Button
-              type="button"
-              className="cursor-pointer bg-yellow-600 hover:bg-yellow-700"
-              onClick={() => {
-                toggleClosedStatus(helpRequest.id);
-                router.push('./chats');
-                setOpen(false);
-              }}
-              disabled={isPending}
-            >
-              {isPending ? 'Updating...' : 'Close Request'}
-            </Button>
+            <>
+              <Button
+                type="button"
+                className="cursor-pointer bg-blue-600 hover:bg-blue-700"
+                onClick={() => {
+                  createConversation({
+                    helpRequestId: helpRequest.id,
+                    volunteerId: userId!,
+                  });
+                  setOpen(false);
+                }}
+                disabled={isCreatingConversation}
+              >
+                {isCreatingConversation ? 'Creating...' : 'Direct Message'}
+              </Button>
+              <Button
+                type="button"
+                className="cursor-pointer bg-yellow-600 hover:bg-yellow-700"
+                onClick={() => {
+                  toggleClosedStatus(helpRequest.id);
+                  setOpen(false);
+                }}
+                disabled={isPending}
+              >
+                {isPending ? 'Updating...' : 'Close Request'}
+              </Button>
+            </>
           )}
           <Button
             type="submit"
