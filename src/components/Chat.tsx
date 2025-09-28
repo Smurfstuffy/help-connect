@@ -98,7 +98,9 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
                 key={msg.id || i}
                 className={`mb-4 ${msg.senderId === userId ? 'text-right' : 'text-left'}`}
               >
-                <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                <div
+                  className={`text-xs text-gray-500 mb-1 flex items-center gap-1 ${msg.senderId === userId ? 'justify-end' : 'justify-start'}`}
+                >
                   <span className="text-sm">👤</span>
                   {msg.senderName} •{' '}
                   {new Date(msg.timestamp).toLocaleTimeString()}
