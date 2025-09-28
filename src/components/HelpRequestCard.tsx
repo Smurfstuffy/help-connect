@@ -34,35 +34,48 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Card className="cursor-pointer hover:bg-accent/90 transition-colors flex flex-row justify-between items-center">
+        <Card className="group cursor-pointer hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02] border-0 shadow-lg bg-white/80 backdrop-blur-sm animate-fade-in flex flex-row justify-between items-center">
           <CardHeader>
-            <CardTitle>{helpRequest.city}</CardTitle>
-            <CardDescription>{helpRequest.description}</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-2xl">📍</span>
+              {helpRequest.city}
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              {helpRequest.description}
+            </CardDescription>
           </CardHeader>
           <div className="flex items-center mr-4">
             <HelpRequestStatus isClosed={helpRequest.is_closed ?? false} />
           </div>
         </Card>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] animate-scale-in">
         <DialogHeader>
-          <DialogTitle>Help Request Details</DialogTitle>
-          <DialogDescription>{helpRequest.description}</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="text-2xl">📋</span>
+            Help Request Details
+          </DialogTitle>
+          <DialogDescription className="text-gray-600">
+            {helpRequest.description}
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="flex flex-wrap gap-2">
-            <h2>Request created by: </h2>
-            <p>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-2xl">👤</span>
+            <h2 className="font-medium">Request created by:</h2>
+            <p className="text-gray-600">
               {user?.name} {user?.surname}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <h2>City: </h2>
-            <p>{helpRequest.city}</p>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-2xl">📍</span>
+            <h2 className="font-medium">City:</h2>
+            <p className="text-gray-600">{helpRequest.city}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <h2>Category: </h2>
-            <p>{helpRequest.category}</p>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-2xl">🏷️</span>
+            <h2 className="font-medium">Category:</h2>
+            <p className="text-gray-600">{helpRequest.category}</p>
           </div>
         </div>
         <DialogFooter className="gap-2">
@@ -70,7 +83,7 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
             <>
               <Button
                 type="button"
-                className="cursor-pointer bg-blue-600 hover:bg-blue-700"
+                className="cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
                 onClick={() => {
                   createConversation({
                     helpRequestId: helpRequest.id,
@@ -84,7 +97,7 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
               </Button>
               <Button
                 type="button"
-                className="cursor-pointer bg-yellow-600 hover:bg-yellow-700"
+                className="cursor-pointer bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
                 onClick={() => {
                   toggleClosedStatus(helpRequest.id);
                   setOpen(false);
@@ -97,7 +110,7 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
           )}
           <Button
             type="submit"
-            className="cursor-pointer"
+            className="cursor-pointer bg-gray-500 hover:bg-gray-600 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
             onClick={() => setOpen(false)}
           >
             Close

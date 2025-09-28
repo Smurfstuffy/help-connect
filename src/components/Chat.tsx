@@ -1,7 +1,7 @@
 'use client';
 import {useState, useRef, useEffect} from 'react';
 import {Button} from './ui/button';
-import {Card, CardContent, CardFooter, CardHeader, CardTitle} from './ui/card';
+import {Card, CardContent, CardHeader, CardTitle} from './ui/card';
 import {ScrollArea} from './ui/scroll-area';
 import {Textarea} from './ui/textarea';
 import {useSupabaseChat} from '@/hooks/useSupabaseChat';
@@ -51,23 +51,27 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
   };
 
   return (
-    <Card>
-      <CardHeader className="justify-center">
+    <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+      <CardHeader className="justify-center bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
         <CardTitle className="flex items-center justify-between">
-          <span>Chat</span>
+          <span className="flex items-center gap-2">
+            <span className="text-2xl">💬</span>
+            Chat
+          </span>
           <div className="flex items-center gap-2">
             <div
-              className={`w-2 h-2 rounded-full ${
-                isConnected ? 'bg-green-500' : 'bg-red-500'
+              className={`w-3 h-3 rounded-full ${
+                isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
               }`}
             />
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-600 font-medium">
               {isConnected ? 'Connected' : 'Disconnected'}
             </span>
           </div>
         </CardTitle>
         {onlineUsers.length > 0 && (
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-gray-600 flex items-center gap-1">
+            <span className="text-lg">👥</span>
             {onlineUsers.length} user{onlineUsers.length !== 1 ? 's' : ''}{' '}
             online
           </div>
@@ -76,28 +80,34 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
       <CardContent>
         <ScrollArea ref={scrollAreaRef} className="h-96">
           {isLoadingMessages ? (
-            <div className="text-center text-gray-500 py-8">
-              Loading messages...
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Loading messages...</span>
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              No messages yet. Start the conversation!
+            <div className="text-center py-8">
+              <div className="text-6xl mb-4">💬</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No messages yet
+              </h3>
+              <p className="text-gray-500">Start the conversation!</p>
             </div>
           ) : (
             messages.map((msg, i) => (
               <div
                 key={msg.id || i}
-                className={`mb-2 ${msg.senderId === userId ? 'text-right' : 'text-left'}`}
+                className={`mb-4 ${msg.senderId === userId ? 'text-right' : 'text-left'}`}
               >
-                <div className="text-xs text-gray-500 mb-1">
+                <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                  <span className="text-sm">👤</span>
                   {msg.senderName} •{' '}
                   {new Date(msg.timestamp).toLocaleTimeString()}
                 </div>
                 <div
-                  className={`inline-block px-3 py-2 rounded-lg max-w-xs ${
+                  className={`inline-block px-4 py-3 rounded-2xl max-w-xs shadow-sm ${
                     msg.senderId === userId
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-200 text-gray-800'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                      : 'bg-gray-100 text-gray-800 border border-gray-200'
                   }`}
                 >
                   {msg.text}
@@ -106,23 +116,34 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
             ))
           )}
         </ScrollArea>
-        <Textarea
-          placeholder="Write a message..."
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          className="mt-4"
-        />
+        <div className="mt-4 space-y-3">
+          <Textarea
+            placeholder="Write a message..."
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+            rows={3}
+          />
+          <Button
+            className="w-full cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2.5 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleSendMessage}
+            disabled={!message.trim() || !isConnected}
+          >
+            {!isConnected ? (
+              <span className="flex items-center gap-2">
+                <span>⚠️</span>
+                Disconnected
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <span>📤</span>
+                Send Message
+              </span>
+            )}
+          </Button>
+        </div>
       </CardContent>
-      <CardFooter className="justify-center">
-        <Button
-          className="w-full cursor-pointer"
-          onClick={handleSendMessage}
-          disabled={!message.trim() || !isConnected}
-        >
-          Send
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
