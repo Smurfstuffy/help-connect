@@ -34,13 +34,11 @@ export async function POST(request: NextRequest) {
 
     const requestUserId = helpRequest.user_id;
 
-    // Check if conversation already exists between these users
+    // Check if conversation already exists for this specific help request
     const {data: existingConversation} = await supabaseAdmin
       .from('conversations')
       .select('id')
-      .or(
-        `and(user_id.eq.${requestUserId},volunteer_id.eq.${volunteerId}),and(user_id.eq.${volunteerId},volunteer_id.eq.${requestUserId})`,
-      )
+      .eq('help_request_id', helpRequestId)
       .single();
 
     if (existingConversation) {
@@ -51,12 +49,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create new conversation
+    // Create new conversation for this specific help request
     const {data: conversation, error: conversationError} = await supabaseAdmin
       .from('conversations')
       .insert({
         user_id: requestUserId,
         volunteer_id: volunteerId,
+        help_request_id: helpRequestId,
         name: `Help Request Chat`,
       })
       .select()

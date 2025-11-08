@@ -17,6 +17,7 @@ export type Database = {
       conversations: {
         Row: {
           created_at: string | null
+          help_request_id: string | null
           id: string
           name: string | null
           user_id: string | null
@@ -24,6 +25,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          help_request_id?: string | null
           id?: string
           name?: string | null
           user_id?: string | null
@@ -31,12 +33,20 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          help_request_id?: string | null
           id?: string
           name?: string | null
           user_id?: string | null
           volunteer_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "conversations_help_request_id_fkey"
+            columns: ["help_request_id"]
+            isOneToOne: false
+            referencedRelation: "help_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversations_user_id_fkey"
             columns: ["user_id"]
