@@ -18,7 +18,8 @@ import {useAuth} from '@/hooks/useAuth';
 import {UserRole} from '@/types/app/register';
 import {useChangeClosedStatusMutation} from '@/hooks/queries/help-requests/useChangeClosedStatusMutation';
 import {useCreateConversationFromRequestMutation} from '@/hooks/queries/conversations/useCreateConversationFromRequestMutation';
-import {MapPin, Clipboard, User, Tag} from 'lucide-react';
+import {useDeleteHelpRequestMutation} from '@/hooks/queries/help-requests/useDeleteHelpRequestMutation';
+import {MapPin, Clipboard, User, Tag, Trash2} from 'lucide-react';
 
 const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
   const [open, setOpen] = useState(false);
@@ -29,8 +30,13 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
     useChangeClosedStatusMutation();
   const {mutate: createConversation, isPending: isCreatingConversation} =
     useCreateConversationFromRequestMutation();
+  const {mutate: deleteHelpRequest, isPending: isDeleting} =
+    useDeleteHelpRequestMutation();
 
   const isVolunteer = currentUser?.role === UserRole.VOLUNTEER;
+  const isUser = currentUser?.role === UserRole.USER;
+  const isOwner = helpRequest.user_id === userId;
+  const canDelete = isUser && isOwner;
   const isClosed = helpRequest.is_closed ?? false;
 
   return (
@@ -117,6 +123,20 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
                     : 'Close Request'}
               </Button>
             </>
+          )}
+          {canDelete && (
+            <Button
+              type="button"
+              className="cursor-pointer bg-red-600 hover:bg-red-700 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border-0"
+              onClick={() => {
+                deleteHelpRequest({id: helpRequest.id, userId: userId!});
+                setOpen(false);
+              }}
+              disabled={isDeleting}
+            >
+              <Trash2 className="w-4 h-4" />
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
           )}
           <Button
             type="submit"
