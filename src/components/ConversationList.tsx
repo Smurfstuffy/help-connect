@@ -53,7 +53,7 @@ const ConversationList = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {conversations.map((conversation, index) => {
         // Determine the other participant's name
         const otherParticipant =
