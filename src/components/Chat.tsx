@@ -6,6 +6,7 @@ import {ScrollArea} from './ui/scroll-area';
 import {Textarea} from './ui/textarea';
 import {useSupabaseChat} from '@/hooks/useSupabaseChat';
 import {useAuth} from '@/hooks/useAuth';
+import {MessageCircle, Users, User, AlertTriangle, Send} from 'lucide-react';
 
 interface ChatProps {
   conversationId?: string;
@@ -55,7 +56,7 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
       <CardHeader className="justify-center bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <span className="text-2xl">💬</span>
+            <MessageCircle className="w-6 h-6" />
             Chat
           </span>
           <div className="flex items-center gap-2">
@@ -71,7 +72,7 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
         </CardTitle>
         {onlineUsers.length > 0 && (
           <div className="text-sm text-gray-600 flex items-center gap-1">
-            <span className="text-lg">👥</span>
+            <Users className="w-4 h-4" />
             {onlineUsers.length} user{onlineUsers.length !== 1 ? 's' : ''}{' '}
             online
           </div>
@@ -86,7 +87,7 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-8">
-              <div className="text-6xl mb-4">💬</div>
+              <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 No messages yet
               </h3>
@@ -101,7 +102,7 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
                 <div
                   className={`text-xs text-gray-500 mb-1 flex items-center gap-1 ${msg.senderId === userId ? 'justify-end' : 'justify-start'}`}
                 >
-                  <span className="text-sm">👤</span>
+                  <User className="w-3 h-3" />
                   {msg.senderName} •{' '}
                   {new Date(msg.timestamp).toLocaleTimeString()}
                 </div>
@@ -134,12 +135,12 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
           >
             {!isConnected ? (
               <span className="flex items-center gap-2">
-                <span>⚠️</span>
+                <AlertTriangle className="w-4 h-4" />
                 Disconnected
               </span>
             ) : (
               <span className="flex items-center gap-2">
-                <span>📤</span>
+                <Send className="w-4 h-4" />
                 Send Message
               </span>
             )}

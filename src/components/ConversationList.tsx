@@ -5,6 +5,7 @@ import {useAuth} from '@/hooks/useAuth';
 import {Card, CardContent, CardHeader, CardTitle} from './ui/card';
 import Link from 'next/link';
 import {UserRole} from '@/types/app/register';
+import {AlertTriangle, MessageCircle, Calendar} from 'lucide-react';
 
 const ConversationList = () => {
   const {userId} = useAuth();
@@ -28,7 +29,7 @@ const ConversationList = () => {
   if (error) {
     return (
       <div className="text-center py-12">
-        <div className="text-6xl mb-4">⚠️</div>
+        <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">
           Error loading conversations
         </h3>
@@ -40,7 +41,7 @@ const ConversationList = () => {
   if (!conversations || conversations.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-6xl mb-4">💬</div>
+        <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">
           No conversations yet
         </h3>
@@ -72,22 +73,19 @@ const ConversationList = () => {
             >
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <span className="text-2xl">💬</span>
+                  <MessageCircle className="w-6 h-6" />
                   {conversation.name || `Chat with ${otherParticipantName}`}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 flex items-center gap-2">
-                  <span className="text-lg">
-                    {currentUser?.role === UserRole.VOLUNTEER ? '🤝' : '🙋‍♀️'}
-                  </span>
                   {currentUser?.role === UserRole.VOLUNTEER
                     ? 'Helping'
                     : 'Getting help from'}
                   : {otherParticipantName}
                 </p>
                 <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                  <span>📅</span>
+                  <Calendar className="w-3 h-3" />
                   Started:{' '}
                   {new Date(conversation.created_at).toLocaleDateString()}
                 </p>

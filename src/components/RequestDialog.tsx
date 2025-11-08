@@ -17,6 +17,7 @@ import {RequestFormValues, requestSchema} from '@/types/app/components/dialog';
 import {useCreateHelpRequestMutation} from '@/hooks/queries/help-requests/useCreateHelpRequestMutation';
 import {useAuth} from '@/hooks/useAuth';
 import {useState} from 'react';
+import {Plus, FileText, MapPin, AlertTriangle, Tag, Check} from 'lucide-react';
 
 const RequestDialog = () => {
   const [open, setOpen] = useState(false);
@@ -40,7 +41,7 @@ const RequestDialog = () => {
       <DialogTrigger asChild>
         <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-10 px-4 py-2 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200">
           <span className="flex items-center gap-2">
-            <span className="text-lg">➕</span>
+            <Plus className="w-4 h-4" />
             Create Request
           </span>
         </button>
@@ -48,7 +49,7 @@ const RequestDialog = () => {
       <DialogContent className="sm:max-w-[500px] animate-scale-in">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span className="text-2xl">📝</span>
+            <FileText className="w-6 h-6" />
             Create a New Help Request
           </DialogTitle>
           <DialogDescription className="text-gray-600">
@@ -59,7 +60,7 @@ const RequestDialog = () => {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2.5">
               <Label htmlFor="city" className="flex items-center gap-2">
-                <span className="text-lg">📍</span>
+                <MapPin className="w-4 h-4" />
                 City
               </Label>
               <Input
@@ -70,14 +71,14 @@ const RequestDialog = () => {
               />
               {errors.city && (
                 <span className="text-red-500 text-xs flex items-center gap-1">
-                  <span>⚠️</span>
+                  <AlertTriangle className="w-3 h-3" />
                   City is required
                 </span>
               )}
             </div>
             <div className="grid gap-2.5">
               <Label htmlFor="category" className="flex items-center gap-2">
-                <span className="text-lg">🏷️</span>
+                <Tag className="w-4 h-4" />
                 Category
               </Label>
               <Input
@@ -88,14 +89,14 @@ const RequestDialog = () => {
               />
               {errors.category && (
                 <span className="text-red-500 text-xs flex items-center gap-1">
-                  <span>⚠️</span>
+                  <AlertTriangle className="w-3 h-3" />
                   Category is required
                 </span>
               )}
             </div>
             <div className="grid gap-2.5">
               <Label htmlFor="description" className="flex items-center gap-2">
-                <span className="text-lg">📝</span>
+                <FileText className="w-4 h-4" />
                 Description
               </Label>
               <textarea
@@ -107,7 +108,7 @@ const RequestDialog = () => {
               />
               {errors.description && (
                 <span className="text-red-500 text-xs flex items-center gap-1">
-                  <span>⚠️</span>
+                  <AlertTriangle className="w-3 h-3" />
                   Description is required
                 </span>
               )}
@@ -125,7 +126,7 @@ const RequestDialog = () => {
               </span>
             ) : (
               <span className="flex items-center gap-2">
-                <span>✅</span>
+                <Check className="w-4 h-4" />
                 Submit Request
               </span>
             )}

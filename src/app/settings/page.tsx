@@ -26,6 +26,7 @@ import {useAuth} from '@/hooks/useAuth';
 import {useEditUserMutation} from '@/hooks/queries/user-profiles/useEditUserMutation';
 import {useRouter} from 'next/navigation';
 import {useEffect} from 'react';
+import {AlertTriangle, Save} from 'lucide-react';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -102,7 +103,6 @@ export default function SettingsPage() {
                 render={({field}) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      <span className="text-lg">👤</span>
                       Name
                     </FormLabel>
                     <FormControl>
@@ -122,7 +122,6 @@ export default function SettingsPage() {
                 render={({field}) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      <span className="text-lg">👤</span>
                       Surname
                     </FormLabel>
                     <FormControl>
@@ -142,7 +141,6 @@ export default function SettingsPage() {
                 render={({field}) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      <span className="text-lg">🏷️</span>
                       Role
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
@@ -164,7 +162,7 @@ export default function SettingsPage() {
               />
               {form.formState.errors.root && (
                 <p className="text-sm text-red-500 flex items-center gap-1">
-                  <span>⚠️</span>
+                  <AlertTriangle className="w-4 h-4" />
                   {form.formState.errors.root.message}
                 </p>
               )}
@@ -180,7 +178,7 @@ export default function SettingsPage() {
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    <span>💾</span>
+                    <Save className="w-4 h-4" />
                     Save Changes
                   </span>
                 )}

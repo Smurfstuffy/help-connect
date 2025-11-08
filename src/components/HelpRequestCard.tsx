@@ -18,6 +18,7 @@ import {useAuth} from '@/hooks/useAuth';
 import {UserRole} from '@/types/app/register';
 import {useChangeClosedStatusMutation} from '@/hooks/queries/help-requests/useChangeClosedStatusMutation';
 import {useCreateConversationFromRequestMutation} from '@/hooks/queries/conversations/useCreateConversationFromRequestMutation';
+import {MapPin, Clipboard, User, Tag} from 'lucide-react';
 
 const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
   const [open, setOpen] = useState(false);
@@ -30,21 +31,22 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
     useCreateConversationFromRequestMutation();
 
   const isVolunteer = currentUser?.role === UserRole.VOLUNTEER;
+  const isClosed = helpRequest.is_closed ?? false;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Card className="group cursor-pointer hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02] border-0 shadow-lg bg-white/80 backdrop-blur-sm animate-fade-in flex flex-row justify-between items-center">
-          <CardHeader>
+          <CardHeader className="flex-1 min-w-0">
             <CardTitle className="flex items-center gap-2">
-              <span className="text-2xl">📍</span>
+              <MapPin className="w-6 h-6" />
               {helpRequest.city}
             </CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardDescription className="text-gray-600 line-clamp-2">
               {helpRequest.description}
             </CardDescription>
           </CardHeader>
-          <div className="flex items-center mr-4">
+          <div className="flex items-center mr-4 flex-shrink-0">
             <HelpRequestStatus isClosed={helpRequest.is_closed ?? false} />
           </div>
         </Card>
@@ -52,7 +54,7 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
       <DialogContent className="sm:max-w-[500px] animate-scale-in">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span className="text-2xl">📋</span>
+            <Clipboard className="w-6 h-6" />
             Help Request Details
           </DialogTitle>
           <DialogDescription className="text-gray-600">
@@ -61,19 +63,19 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-2xl">👤</span>
+            <User className="w-6 h-6" />
             <h2 className="font-medium">Request created by:</h2>
             <p className="text-gray-600">
               {user?.name} {user?.surname}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-2xl">📍</span>
+            <MapPin className="w-6 h-6" />
             <h2 className="font-medium">City:</h2>
             <p className="text-gray-600">{helpRequest.city}</p>
           </div>
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-2xl">🏷️</span>
+            <Tag className="w-6 h-6" />
             <h2 className="font-medium">Category:</h2>
             <p className="text-gray-600">{helpRequest.category}</p>
           </div>
@@ -97,14 +99,22 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
               </Button>
               <Button
                 type="button"
-                className="cursor-pointer bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                className={`cursor-pointer text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isClosed
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
                 onClick={() => {
                   toggleClosedStatus(helpRequest.id);
                   setOpen(false);
                 }}
                 disabled={isPending}
               >
-                {isPending ? 'Updating...' : 'Close Request'}
+                {isPending
+                  ? 'Updating...'
+                  : isClosed
+                    ? 'Activate Request'
+                    : 'Close Request'}
               </Button>
             </>
           )}

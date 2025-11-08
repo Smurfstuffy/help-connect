@@ -7,7 +7,7 @@ const HelpRequestStatus = ({isClosed}: {isClosed: boolean}) => {
           : 'bg-green-100 text-green-700 border border-green-300'
       }`}
     >
-      {isClosed ? 'Closed' : 'Actual'}
+      {isClosed ? 'Closed' : 'Active'}
     </div>
   );
 };
