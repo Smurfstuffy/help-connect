@@ -5,6 +5,7 @@ import {
   CreateConversationRequest,
   CreateConversationResponse,
 } from '@/types/chat';
+import {generateChatTitle} from '@/services/openai/conversations/generateChatTitle';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,10 +19,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the help request to find the original user
+    // Get the help request to find the original user and data for title generation
     const {data: helpRequest, error: helpRequestError} = await supabaseAdmin
       .from('help_requests')
-      .select('user_id')
+      .select('user_id, city, category, description')
       .eq('id', helpRequestId)
       .single();
 
@@ -33,6 +34,19 @@ export async function POST(request: NextRequest) {
     }
 
     const requestUserId = helpRequest.user_id;
+
+    // Generate chat title based on help request data
+    let chatTitle = 'Help Request Chat';
+    try {
+      chatTitle = await generateChatTitle({
+        city: helpRequest.city,
+        category: helpRequest.category,
+        description: helpRequest.description,
+      });
+    } catch (error) {
+      console.error('Error generating chat title, using default:', error);
+      // Continue with default title if generation fails
+    }
 
     // Check if conversation already exists for this specific help request
     const {data: existingConversation} = await supabaseAdmin
@@ -56,7 +70,7 @@ export async function POST(request: NextRequest) {
         user_id: requestUserId,
         volunteer_id: volunteerId,
         help_request_id: helpRequestId,
-        name: `Help Request Chat`,
+        name: chatTitle,
       })
       .select()
       .single();
