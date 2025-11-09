@@ -13,10 +13,10 @@ const MyHelpRequestsPage = () => {
     <div className="space-y-8">
       {/* Header Section */}
       <div className="text-center space-y-4">
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-normal pb-1">
           My Help Requests
         </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
           Manage and track your help requests and see responses from volunteers.
         </p>
       </div>

@@ -27,21 +27,21 @@ export default function AuthLayout({children}: {children: React.ReactNode}) {
               <div className="flex-shrink-0 flex items-center space-x-4">
                 <Link
                   href="/"
-                  className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                  className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-normal"
                 >
                   Help Connect
                 </Link>
                 {user && user.role === UserRole.USER && (
                   <Link
                     href="/my-help-requests"
-                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-md font-medium transition-colors"
+                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-md font-medium transition-colors leading-normal"
                   >
                     My Requests
                   </Link>
                 )}
                 <Link
                   href="/chats"
-                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-md font-medium transition-colors"
+                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-md font-medium transition-colors leading-normal"
                 >
                   Chats
                 </Link>
@@ -51,7 +51,7 @@ export default function AuthLayout({children}: {children: React.ReactNode}) {
               {user && (
                 <Link
                   href="/settings"
-                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-md font-medium transition-colors"
+                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-md font-medium transition-colors leading-normal"
                 >
                   {user.name} {user.surname}
                 </Link>
