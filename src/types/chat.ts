@@ -102,6 +102,7 @@ export interface ConversationWithUsers {
   id: string;
   user_id: string | null;
   volunteer_id: string | null;
+  help_request_id: string | null;
   name: string | null;
   created_at: string;
   user_profiles: {
