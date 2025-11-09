@@ -1,13 +1,20 @@
 'use client';
-import {useState} from 'react';
+import {useState, useMemo} from 'react';
 import {useFetchConversationsQuery} from '@/hooks/queries/conversations/useFetchConversationsQuery';
 import {useFetchUserQuery} from '@/hooks/queries/user-profiles/useFetchUserQuery';
 import {useAuth} from '@/hooks/useAuth';
 import {Card, CardContent, CardHeader, CardTitle} from './ui/card';
 import {Button} from './ui/button';
+import {Input} from './ui/input';
 import Link from 'next/link';
 import {UserRole} from '@/types/app/register';
-import {AlertTriangle, MessageCircle, Calendar, Trash2} from 'lucide-react';
+import {
+  AlertTriangle,
+  MessageCircle,
+  Calendar,
+  Trash2,
+  Search,
+} from 'lucide-react';
 import {useDeleteConversationMutation} from '@/hooks/queries/conversations/useDeleteConversationMutation';
 import PostChatDeletionDialog from './PostChatDeletionDialog';
 
@@ -20,12 +27,25 @@ const ConversationList = () => {
     helpRequestId: string | null;
     open: boolean;
   }>({helpRequestId: null, open: false});
+  const [searchQuery, setSearchQuery] = useState('');
 
   const {
     data: conversations,
     isLoading,
     error,
   } = useFetchConversationsQuery(userId ?? '', currentUser?.role ?? '');
+
+  const filteredConversations = useMemo(() => {
+    if (!conversations || !searchQuery.trim()) {
+      return conversations || [];
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    return conversations.filter(conversation => {
+      const title = conversation.name?.toLowerCase() || '';
+      return title.includes(query);
+    });
+  }, [conversations, searchQuery]);
 
   if (isLoading) {
     return (
@@ -68,9 +88,23 @@ const ConversationList = () => {
     );
   }
 
-  if (!conversations || conversations.length === 0) {
-    return (
-      <>
+  const hasConversations = conversations && conversations.length > 0;
+  const hasFilteredResults = filteredConversations.length > 0;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Search by chat title..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="pl-10 w-full"
+        />
+      </div>
+
+      {!hasConversations ? (
         <div className="text-center py-12">
           <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -80,91 +114,87 @@ const ConversationList = () => {
             Start a conversation by responding to a help request!
           </p>
         </div>
-        <PostChatDeletionDialog
-          open={deletedConversation.open}
-          onOpenChange={open =>
-            setDeletedConversation(prev => ({...prev, open}))
-          }
-          helpRequestId={deletedConversation.helpRequestId}
-          userRole={currentUser?.role ?? ''}
-        />
-      </>
-    );
-  }
+      ) : !hasFilteredResults ? (
+        <div className="text-center py-12">
+          <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No conversations found
+          </h3>
+          <p className="text-gray-500">Try adjusting your search query.</p>
+        </div>
+      ) : (
+        filteredConversations.map((conversation, index) => {
+          // Determine the other participant's name
+          const otherParticipant =
+            currentUser?.role === UserRole.VOLUNTEER
+              ? conversation.user_profiles
+              : conversation.volunteer_profiles;
 
-  return (
-    <div className="flex flex-col gap-4">
-      {conversations.map((conversation, index) => {
-        // Determine the other participant's name
-        const otherParticipant =
-          currentUser?.role === UserRole.VOLUNTEER
-            ? conversation.user_profiles
-            : conversation.volunteer_profiles;
+          const otherParticipantName = otherParticipant
+            ? `${otherParticipant.name || ''} ${otherParticipant.surname || ''}`.trim()
+            : 'Unknown User';
 
-        const otherParticipantName = otherParticipant
-          ? `${otherParticipant.name || ''} ${otherParticipant.surname || ''}`.trim()
-          : 'Unknown User';
-
-        return (
-          <div
-            key={conversation.id}
-            className="relative group animate-fade-in hover:scale-[1.02] transition-all duration-300"
-            style={{animationDelay: `${index * 0.1}s`}}
-          >
-            <Link href={`/chats/${conversation.id}`}>
-              <Card className="cursor-pointer hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader className="relative">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <MessageCircle className="w-6 h-6" />
-                    {conversation.name || `Chat with ${otherParticipantName}`}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 flex items-center gap-2">
-                    {currentUser?.role === UserRole.VOLUNTEER
-                      ? 'Helping'
-                      : 'Getting help from'}
-                    : {otherParticipantName}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    Started:{' '}
-                    {new Date(conversation.created_at).toLocaleDateString()}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-            <Button
-              type="button"
-              className="absolute top-2 right-2 cursor-pointer bg-transparent hover:bg-red-100 text-red-600 p-2 h-8 w-8 border-0 shadow-none transition-all duration-300"
-              onClick={async e => {
-                e.preventDefault();
-                e.stopPropagation();
-                try {
-                  await deleteConversation({
-                    id: conversation.id,
-                    userId: userId!,
-                    userRole: currentUser?.role ?? '',
-                  });
-                  console.log(
-                    'Chat deleted successfully, helpRequestId:',
-                    conversation.help_request_id,
-                  );
-                  setDeletedConversation({
-                    helpRequestId: conversation.help_request_id,
-                    open: true,
-                  });
-                } catch (error) {
-                  console.error('Error deleting chat:', error);
-                }
-              }}
-              disabled={isDeleting}
+          return (
+            <div
+              key={conversation.id}
+              className="relative group animate-fade-in hover:scale-[1.02] transition-all duration-300"
+              style={{animationDelay: `${index * 0.1}s`}}
             >
-              <Trash2 className="w-4 h-4 text-red-600" />
-            </Button>
-          </div>
-        );
-      })}
+              <Link href={`/chats/${conversation.id}`}>
+                <Card className="cursor-pointer hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                  <CardHeader className="relative">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <MessageCircle className="w-6 h-6" />
+                      {conversation.name || `Chat with ${otherParticipantName}`}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 flex items-center gap-2">
+                      {currentUser?.role === UserRole.VOLUNTEER
+                        ? 'Helping'
+                        : 'Getting help from'}
+                      : {otherParticipantName}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      Started:{' '}
+                      {new Date(conversation.created_at).toLocaleDateString()}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Button
+                type="button"
+                className="absolute top-2 right-2 cursor-pointer bg-transparent hover:bg-red-100 text-red-600 p-2 h-8 w-8 border-0 shadow-none transition-all duration-300"
+                onClick={async e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  try {
+                    await deleteConversation({
+                      id: conversation.id,
+                      userId: userId!,
+                      userRole: currentUser?.role ?? '',
+                    });
+                    console.log(
+                      'Chat deleted successfully, helpRequestId:',
+                      conversation.help_request_id,
+                    );
+                    setDeletedConversation({
+                      helpRequestId: conversation.help_request_id,
+                      open: true,
+                    });
+                  } catch (error) {
+                    console.error('Error deleting chat:', error);
+                  }
+                }}
+                disabled={isDeleting}
+              >
+                <Trash2 className="w-4 h-4 text-red-600" />
+              </Button>
+            </div>
+          );
+        })
+      )}
       <PostChatDeletionDialog
         open={deletedConversation.open}
         onOpenChange={open => setDeletedConversation(prev => ({...prev, open}))}
