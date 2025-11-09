@@ -1,10 +1,14 @@
 import {useQuery} from '@tanstack/react-query';
-import {fetchHelpRequestsByUserId} from '@/services/axios/help-requests/fetchHelpRequestsById';
+import {fetchHelpRequests} from '@/services/axios/help-requests/fetchHelpRequests';
+import {HelpRequestFilters} from '@/services/supabase/help-request/fetch';
 
-export const useFetchHelpRequestsByUserIdQuery = (userId: string) => {
+export const useFetchHelpRequestsByUserIdQuery = (
+  userId: string,
+  filters?: Omit<HelpRequestFilters, 'userId'>,
+) => {
   return useQuery({
-    queryKey: ['help-requests-by-user', userId],
-    queryFn: () => fetchHelpRequestsByUserId(userId),
+    queryKey: ['help-requests-by-user', userId, filters],
+    queryFn: () => fetchHelpRequests({...filters, userId}),
     enabled: !!userId,
   });
 };

@@ -1,15 +1,20 @@
 'use client';
+import {useState} from 'react';
 import HelpRequestList from '@/components/HelpRequestList';
 import RequestDialog from '@/components/RequestDialog';
+import HelpRequestFilters from '@/components/HelpRequestFilters';
 import {useFetchHelpRequestsQuery} from '@/hooks/queries/help-requests/useFetchHelpRequestsQuery';
 import {useAuth} from '@/hooks/useAuth';
 import {useFetchUserQuery} from '@/hooks/queries/user-profiles/useFetchUserQuery';
 import {UserRole} from '@/types/app/register';
+import {HelpRequestFilters as HelpRequestFiltersType} from '@/services/supabase/help-request/fetch';
 
 export default function Home() {
   const {userId} = useAuth();
   const {data: user} = useFetchUserQuery(userId ?? '');
-  const {data: helpRequests, isLoading} = useFetchHelpRequestsQuery();
+  const [filters, setFilters] = useState<HelpRequestFiltersType>({});
+  const {data: helpRequests, isLoading} = useFetchHelpRequestsQuery(filters);
+
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -30,6 +35,7 @@ export default function Home() {
             <RequestDialog />
           </div>
         )}
+        <HelpRequestFilters filters={filters} onFiltersChange={setFilters} />
         <HelpRequestList
           helpRequests={helpRequests ?? []}
           isLoading={isLoading}

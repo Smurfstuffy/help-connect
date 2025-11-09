@@ -1,14 +1,21 @@
 'use client';
+import {useState} from 'react';
 import HelpRequestList from '@/components/HelpRequestList';
+import HelpRequestFilters from '@/components/HelpRequestFilters';
 import {useFetchHelpRequestsByUserIdQuery} from '@/hooks/queries/help-requests/useFetchHelpRequestsByUserIdQuery';
 import {useAuth} from '@/hooks/useAuth';
+import {HelpRequestFilters as HelpRequestFiltersType} from '@/services/supabase/help-request/fetch';
 
 const MyHelpRequestsPage = () => {
   const {userId} = useAuth();
-  console.log(userId);
+  const [filters, setFilters] = useState<
+    Omit<HelpRequestFiltersType, 'userId'>
+  >({});
   const {data: helpRequests, isLoading} = useFetchHelpRequestsByUserIdQuery(
     userId ?? '',
+    filters,
   );
+
   return (
     <div className="space-y-8">
       {/* Header Section */}
@@ -23,6 +30,7 @@ const MyHelpRequestsPage = () => {
 
       {/* Main Content */}
       <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20">
+        <HelpRequestFilters filters={filters} onFiltersChange={setFilters} />
         <HelpRequestList
           helpRequests={helpRequests ?? []}
           isLoading={isLoading}
