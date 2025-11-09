@@ -36,7 +36,7 @@ const HelpRequestList: FC<HelpRequestListProps> = ({
 
   return (
     <ScrollArea className="h-full flex flex-col w-full">
-      <div className="flex flex-col gap-y-4 py-4 px-4">
+      <div className="flex flex-col gap-4 pb-4 px-4">
         {helpRequests?.map((helpRequest, index) => (
           <div
             key={helpRequest.id}
