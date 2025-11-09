@@ -65,30 +65,33 @@ export type Database = {
       }
       help_requests: {
         Row: {
-          category: string | null
+          category: Database["public"]["Enums"]["help_request_category"] | null
           city: string | null
           created_at: string | null
           description: string | null
           id: string
           is_closed: boolean | null
+          urgency: Database["public"]["Enums"]["help_request_urgency"] | null
           user_id: string | null
         }
         Insert: {
-          category?: string | null
+          category?: Database["public"]["Enums"]["help_request_category"] | null
           city?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           is_closed?: boolean | null
+          urgency?: Database["public"]["Enums"]["help_request_urgency"] | null
           user_id?: string | null
         }
         Update: {
-          category?: string | null
+          category?: Database["public"]["Enums"]["help_request_category"] | null
           city?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           is_closed?: boolean | null
+          urgency?: Database["public"]["Enums"]["help_request_urgency"] | null
           user_id?: string | null
         }
         Relationships: [
@@ -172,7 +175,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      help_request_category:
+        | "Food"
+        | "Transportation"
+        | "Medical"
+        | "Shelter"
+        | "Clothing"
+        | "Other"
+      help_request_urgency: "Low" | "Medium" | "High" | "Critical"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -299,6 +309,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      help_request_category: [
+        "Food",
+        "Transportation",
+        "Medical",
+        "Shelter",
+        "Clothing",
+        "Other",
+      ],
+      help_request_urgency: ["Low", "Medium", "High", "Critical"],
+    },
   },
 } as const

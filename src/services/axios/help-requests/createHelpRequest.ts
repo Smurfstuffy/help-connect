@@ -2,7 +2,7 @@ import {ApiResponse} from '@/types/app/api';
 import axios from 'axios';
 import {HelpRequestInsert} from '@/services/supabase/help-request/create';
 
-export const createUser = async (
+export const createHelpRequest = async (
   helpRequest: HelpRequestInsert,
 ): Promise<HelpRequestInsert | undefined> => {
   const {data} = await axios.post<ApiResponse<HelpRequestInsert>>(

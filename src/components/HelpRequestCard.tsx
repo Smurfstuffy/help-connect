@@ -19,7 +19,7 @@ import {UserRole} from '@/types/app/register';
 import {useChangeClosedStatusMutation} from '@/hooks/queries/help-requests/useChangeClosedStatusMutation';
 import {useCreateConversationFromRequestMutation} from '@/hooks/queries/conversations/useCreateConversationFromRequestMutation';
 import {useDeleteHelpRequestMutation} from '@/hooks/queries/help-requests/useDeleteHelpRequestMutation';
-import {MapPin, Clipboard, User, Tag, Trash2} from 'lucide-react';
+import {MapPin, Clipboard, User, Tag, Trash2, AlertCircle} from 'lucide-react';
 
 const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
   const [open, setOpen] = useState(false);
@@ -85,6 +85,13 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
             <h2 className="font-medium">Category:</h2>
             <p className="text-gray-600">{helpRequest.category}</p>
           </div>
+          {helpRequest.urgency && (
+            <div className="flex flex-wrap gap-2 items-center">
+              <AlertCircle className="w-6 h-6" />
+              <h2 className="font-medium">Urgency:</h2>
+              <p className="text-gray-600">{helpRequest.urgency}</p>
+            </div>
+          )}
         </div>
         <DialogFooter className="gap-2">
           {isVolunteer && (

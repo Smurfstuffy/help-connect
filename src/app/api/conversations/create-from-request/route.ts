@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     // Get the help request to find the original user and data for title generation
     const {data: helpRequest, error: helpRequestError} = await supabaseAdmin
       .from('help_requests')
-      .select('user_id, city, category, description')
+      .select('user_id, city, category, urgency, description')
       .eq('id', helpRequestId)
       .single();
 
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       chatTitle = await generateChatTitle({
         city: helpRequest.city,
         category: helpRequest.category,
+        urgency: helpRequest.urgency,
         description: helpRequest.description,
       });
     } catch (error) {

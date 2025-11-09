@@ -3,20 +3,21 @@ import {openai, OPENAI_TASK_CONFIGS} from '@/lib/openai';
 export interface GenerateChatTitleParams {
   city?: string | null;
   category?: string | null;
+  urgency?: string | null;
   description?: string | null;
 }
 
 /**
  * Generates a concise, descriptive title for a chat conversation
- * based on the help request data (city, category, description).
+ * based on the help request data (city, category, urgency, description).
  *
- * @param params - Help request data (city, category, description)
+ * @param params - Help request data (city, category, urgency, description)
  * @returns A generated chat title (max 50 characters)
  */
 export async function generateChatTitle(
   params: GenerateChatTitleParams,
 ): Promise<string> {
-  const {city, category, description} = params;
+  const {city, category, urgency, description} = params;
 
   const contextParts: string[] = [];
   if (city) {
@@ -24,6 +25,9 @@ export async function generateChatTitle(
   }
   if (category) {
     contextParts.push(`Category: ${category}`);
+  }
+  if (urgency) {
+    contextParts.push(`Urgency: ${urgency}`);
   }
   if (description) {
     contextParts.push(`Request: ${description}`);

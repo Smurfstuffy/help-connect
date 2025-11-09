@@ -12,28 +12,61 @@ import {
 } from './ui/dialog';
 import {Input} from './ui/input';
 import {Label} from './ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {RequestFormValues, requestSchema} from '@/types/app/components/dialog';
 import {useCreateHelpRequestMutation} from '@/hooks/queries/help-requests/useCreateHelpRequestMutation';
 import {useAuth} from '@/hooks/useAuth';
 import {useState} from 'react';
-import {Plus, FileText, MapPin, AlertTriangle, Tag, Check} from 'lucide-react';
+import {
+  Plus,
+  FileText,
+  MapPin,
+  AlertTriangle,
+  Tag,
+  Check,
+  AlertCircle,
+} from 'lucide-react';
+import {
+  CATEGORY_OPTIONS,
+  URGENCY_OPTIONS,
+  HELP_REQUEST_URGENCY,
+  HelpRequestCategory,
+  HelpRequestUrgency,
+} from '@/types/app/enums';
 
 const RequestDialog = () => {
   const [open, setOpen] = useState(false);
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
+    trigger,
     formState: {errors},
   } = useForm<RequestFormValues>({
     resolver: zodResolver(requestSchema),
+    defaultValues: {
+      urgency: HELP_REQUEST_URGENCY.MEDIUM,
+    },
   });
 
   const {mutate: createHelpRequest, isPending} = useCreateHelpRequestMutation();
   const {userId} = useAuth();
 
   const onSubmit = (data: RequestFormValues) => {
-    createHelpRequest({...data, user_id: userId});
+    createHelpRequest({
+      ...data,
+      category: data.category as HelpRequestCategory,
+      urgency: data.urgency as HelpRequestUrgency,
+      user_id: userId,
+    });
     setOpen(false);
   };
   return (
@@ -81,16 +114,70 @@ const RequestDialog = () => {
                 <Tag className="w-4 h-4" />
                 Category
               </Label>
-              <Input
-                id="category"
-                placeholder="Enter category (e.g., Food, Transportation)"
-                className="focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                {...register('category', {required: true})}
-              />
+              <Select
+                value={watch('category')}
+                onValueChange={value => {
+                  setValue('category', value as HelpRequestCategory, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                  trigger('category');
+                }}
+              >
+                <SelectTrigger
+                  id="category"
+                  className="w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                >
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORY_OPTIONS.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {errors.category && (
                 <span className="text-red-500 text-xs flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
-                  Category is required
+                  {errors.category.message || 'Category is required'}
+                </span>
+              )}
+            </div>
+            <div className="grid gap-2.5">
+              <Label htmlFor="urgency" className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Urgency
+              </Label>
+              <Select
+                value={watch('urgency') || HELP_REQUEST_URGENCY.MEDIUM}
+                onValueChange={value => {
+                  setValue('urgency', value as HelpRequestUrgency, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                  trigger('urgency');
+                }}
+              >
+                <SelectTrigger
+                  id="urgency"
+                  className="w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                >
+                  <SelectValue placeholder="Select urgency level" />
+                </SelectTrigger>
+                <SelectContent>
+                  {URGENCY_OPTIONS.map(urgency => (
+                    <SelectItem key={urgency} value={urgency}>
+                      {urgency}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.urgency && (
+                <span className="text-red-500 text-xs flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {errors.urgency.message || 'Urgency is required'}
                 </span>
               )}
             </div>
