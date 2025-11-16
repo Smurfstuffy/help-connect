@@ -47,6 +47,20 @@ export async function GET(
       filters.maxDate = searchParams.get('maxDate') || undefined;
     }
 
+    if (searchParams.has('offset')) {
+      const offset = parseInt(searchParams.get('offset') || '0', 10);
+      if (!isNaN(offset)) {
+        filters.offset = offset;
+      }
+    }
+
+    if (searchParams.has('limit')) {
+      const limit = parseInt(searchParams.get('limit') || '10', 10);
+      if (!isNaN(limit)) {
+        filters.limit = limit;
+      }
+    }
+
     const data = await getHelpRequest(
       Object.keys(filters).length > 0 ? filters : undefined,
     );

@@ -14,6 +14,8 @@ export interface HelpRequestFilters {
   search?: string;
   minDate?: string;
   maxDate?: string;
+  offset?: number;
+  limit?: number;
 }
 
 export async function getHelpRequest(
@@ -51,33 +53,62 @@ export async function getHelpRequest(
       query = query.lte('created_at', filters.maxDate);
     }
 
-    const {data, error} = await query.order('created_at', {ascending: true});
+    if (filters?.search && filters.search.trim()) {
+      const searchTerm = filters.search.trim().toLowerCase();
+
+      // Build OR conditions for text fields (can use ilike)
+      const searchConditions = [
+        `city.ilike.%${searchTerm}%`,
+        `description.ilike.%${searchTerm}%`,
+      ];
+
+      // For enum fields, check if search term matches any enum value
+      // This allows searching for "Food", "Medical", "High", etc.
+      const categoryOptions = [
+        'Food',
+        'Transportation',
+        'Medical',
+        'Shelter',
+        'Clothing',
+        'Other',
+      ];
+      const urgencyOptions = ['Low', 'Medium', 'High', 'Critical'];
+
+      const categoryMatch = categoryOptions.find(cat =>
+        cat.toLowerCase().includes(searchTerm),
+      );
+      const urgencyMatch = urgencyOptions.find(urg =>
+        urg.toLowerCase().includes(searchTerm),
+      );
+
+      // Add enum matches to search conditions
+      if (categoryMatch) {
+        searchConditions.push(`category.eq.${categoryMatch}`);
+      }
+      if (urgencyMatch) {
+        searchConditions.push(`urgency.eq.${urgencyMatch}`);
+      }
+
+      // Apply all search conditions as OR
+      query = query.or(searchConditions.join(','));
+    }
+
+    query = query.order('created_at', {ascending: true});
+
+    if (filters?.offset !== undefined && filters?.limit !== undefined) {
+      const from = filters.offset;
+      const to = filters.offset + filters.limit - 1;
+      query = query.range(from, to);
+    }
+
+    const {data, error} = await query;
 
     if (error) {
       console.error('Error fetching help requests:', error);
       throw new Error(error.message);
     }
 
-    // Apply search filter in memory (searches across multiple fields)
-    let filteredData = data || [];
-    if (filters?.search && filters.search.trim()) {
-      const searchTerm = filters.search.toLowerCase().trim();
-      filteredData = filteredData.filter(request => {
-        const city = request.city?.toLowerCase() || '';
-        const category = request.category?.toLowerCase() || '';
-        const urgency = request.urgency?.toLowerCase() || '';
-        const description = request.description?.toLowerCase() || '';
-
-        return (
-          city.includes(searchTerm) ||
-          category.includes(searchTerm) ||
-          urgency.includes(searchTerm) ||
-          description.includes(searchTerm)
-        );
-      });
-    }
-
-    return filteredData;
+    return data;
   } catch (error) {
     console.error('Unexpected error fetching help requests:', error);
     throw error;

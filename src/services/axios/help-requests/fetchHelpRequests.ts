@@ -31,6 +31,12 @@ export const fetchHelpRequests = async (
   if (filters?.maxDate) {
     params.append('maxDate', filters.maxDate);
   }
+  if (filters?.offset !== undefined) {
+    params.append('offset', filters.offset.toString());
+  }
+  if (filters?.limit !== undefined) {
+    params.append('limit', filters.limit.toString());
+  }
 
   const queryString = params.toString();
   const url = `/api/help-requests/get${queryString ? `?${queryString}` : ''}`;

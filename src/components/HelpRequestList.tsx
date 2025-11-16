@@ -1,18 +1,55 @@
 import {ScrollArea} from './ui/scroll-area';
 import HelpRequestCard from './HelpRequestCard';
 import {HelpRequest} from '@/types/app/api';
-import {FC} from 'react';
+import {FC, useEffect, useRef} from 'react';
 import {FileText} from 'lucide-react';
 
 interface HelpRequestListProps {
   helpRequests: HelpRequest[];
   isLoading: boolean;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  fetchNextPage?: () => void;
 }
 
 const HelpRequestList: FC<HelpRequestListProps> = ({
   helpRequests,
   isLoading,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
 }: HelpRequestListProps) => {
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!hasNextPage || !fetchNextPage || isFetchingNextPage) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      {
+        rootMargin: '200px', // Start loading 200px before reaching the bottom
+      },
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [hasNextPage, fetchNextPage, isFetchingNextPage]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -46,6 +83,19 @@ const HelpRequestList: FC<HelpRequestListProps> = ({
             <HelpRequestCard helpRequest={helpRequest} />
           </div>
         ))}
+        {/* Sentinel element for infinite scroll */}
+        {hasNextPage && (
+          <div ref={loadMoreRef} className="flex justify-center py-4">
+            {isFetchingNextPage && (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-sm text-gray-600">
+                  Loading more...
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </ScrollArea>
   );
