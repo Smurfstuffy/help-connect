@@ -62,6 +62,7 @@ export type NewMessagePayload = ChatMessage;
 // Hook types
 export interface UseSupabaseChatOptions {
   conversationId: string;
+  skipInitialLoad?: boolean;
 }
 
 export interface UseSupabaseChatReturn {

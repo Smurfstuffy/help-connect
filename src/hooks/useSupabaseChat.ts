@@ -14,6 +14,7 @@ import {
 
 export const useSupabaseChat = ({
   conversationId,
+  skipInitialLoad = false,
 }: UseSupabaseChatOptions): UseSupabaseChatReturn => {
   const {userId} = useAuth();
   const {data: currentUser} = useFetchUserQuery(userId ?? '');
@@ -22,9 +23,9 @@ export const useSupabaseChat = ({
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
-  // Load existing messages
+  // Load existing messages (only if not skipping initial load)
   const loadMessages = useCallback(async () => {
-    if (!conversationId) return;
+    if (!conversationId || skipInitialLoad) return;
 
     setIsLoadingMessages(true);
     try {
@@ -53,7 +54,7 @@ export const useSupabaseChat = ({
     } finally {
       setIsLoadingMessages(false);
     }
-  }, [conversationId]);
+  }, [conversationId, skipInitialLoad]);
 
   // Send message
   const sendMessage = useCallback(

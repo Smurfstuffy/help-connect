@@ -1,12 +1,14 @@
 'use client';
-import {useState, useRef, useEffect} from 'react';
+import {useState, useRef, useEffect, useMemo} from 'react';
 import {Button} from './ui/button';
 import {Card, CardContent, CardHeader, CardTitle} from './ui/card';
 import {ScrollArea} from './ui/scroll-area';
 import {Textarea} from './ui/textarea';
 import {useSupabaseChat} from '@/hooks/useSupabaseChat';
 import {useAuth} from '@/hooks/useAuth';
+import {useFetchMessagesInfiniteQuery} from '@/hooks/queries/messages/useFetchMessagesInfiniteQuery';
 import {MessageCircle, Users, User, AlertTriangle, Send} from 'lucide-react';
+import {ChatMessage} from '@/types/chat';
 
 interface ChatProps {
   conversationId?: string;
@@ -16,26 +18,189 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
   const {userId} = useAuth();
   const [message, setMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const isInitialLoadRef = useRef(true);
+  const previousScrollHeightRef = useRef(0);
+
+  // Fetch messages with infinite query
+  const {
+    data: messagesData,
+    isLoading: isLoadingMessages,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useFetchMessagesInfiniteQuery(conversationId);
+
+  // Flatten pages into single array and reverse to show oldest first (newest at bottom)
+  const fetchedMessages = useMemo(() => {
+    if (!messagesData?.pages) return [];
+    // Messages come in DESC order (newest first) per page
+    // Reverse each page individually, then combine to maintain chronological order
+    const reversedPages = messagesData.pages
+      .map(page => {
+        const validPage = (page ?? []).filter(
+          (item): item is NonNullable<typeof item> => item !== undefined,
+        );
+        // Reverse each page to get oldest first within the page
+        return [...validPage].reverse();
+      })
+      .reverse(); // Reverse the order of pages (newest page first becomes oldest page first)
+
+    // Flatten all pages
+    return reversedPages.flat();
+  }, [messagesData]);
 
   const {
-    messages,
+    messages: realtimeMessages,
     isConnected,
-    isLoadingMessages,
     onlineUsers,
     sendMessage: sendChatMessage,
-  } = useSupabaseChat({conversationId});
+  } = useSupabaseChat({conversationId, skipInitialLoad: true});
 
-  // Auto-scroll to bottom when new messages arrive
+  // Transform fetched messages to ChatMessage format
+  const transformedFetchedMessages = useMemo<ChatMessage[]>(() => {
+    return fetchedMessages.map(msg => ({
+      id: msg.id,
+      text: msg.message_text || '',
+      senderId: msg.sender_id || '',
+      senderName:
+        `${msg.user_profiles?.name || ''} ${msg.user_profiles?.surname || ''}`.trim(),
+      timestamp: msg.created_at,
+      conversationId: msg.conversation_id || '',
+    }));
+  }, [fetchedMessages]);
+
+  // Merge fetched messages with realtime messages (avoid duplicates)
+  const allMessages = useMemo(() => {
+    const messageMap = new Map<string, ChatMessage>();
+
+    // Add fetched messages first
+    transformedFetchedMessages.forEach(msg => {
+      messageMap.set(msg.id, msg);
+    });
+
+    // Add realtime messages (newer ones will overwrite if duplicate)
+    realtimeMessages.forEach(msg => {
+      messageMap.set(msg.id, msg);
+    });
+
+    // Sort by timestamp ascending (oldest first)
+    return Array.from(messageMap.values()).sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    );
+  }, [transformedFetchedMessages, realtimeMessages]);
+
+  // Scroll to bottom on initial load
   useEffect(() => {
-    if (scrollAreaRef.current) {
+    if (
+      isInitialLoadRef.current &&
+      !isLoadingMessages &&
+      allMessages.length > 0
+    ) {
+      setTimeout(() => {
+        if (scrollAreaRef.current) {
+          const scrollElement = scrollAreaRef.current.querySelector(
+            '[data-radix-scroll-area-viewport]',
+          );
+          if (scrollElement) {
+            scrollElement.scrollTop = scrollElement.scrollHeight;
+            isInitialLoadRef.current = false;
+          }
+        }
+      }, 100);
+    }
+  }, [isLoadingMessages, allMessages.length]);
+
+  // Auto-scroll to bottom when new messages arrive (but not when loading older messages)
+  useEffect(() => {
+    if (
+      !isInitialLoadRef.current &&
+      !isFetchingNextPage &&
+      scrollAreaRef.current
+    ) {
       const scrollElement = scrollAreaRef.current.querySelector(
         '[data-radix-scroll-area-viewport]',
       );
       if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
+        // Only auto-scroll if user is near the bottom (within 100px)
+        const isNearBottom =
+          scrollElement.scrollHeight -
+            scrollElement.scrollTop -
+            scrollElement.clientHeight <
+          100;
+        if (isNearBottom) {
+          scrollElement.scrollTop = scrollElement.scrollHeight;
+        }
       }
     }
-  }, [messages]);
+  }, [realtimeMessages.length, isFetchingNextPage]);
+
+  // Maintain scroll position when loading older messages
+  useEffect(() => {
+    if (isFetchingNextPage && messagesContainerRef.current) {
+      const scrollElement = scrollAreaRef.current?.querySelector(
+        '[data-radix-scroll-area-viewport]',
+      );
+      if (scrollElement) {
+        previousScrollHeightRef.current = scrollElement.scrollHeight;
+      }
+    }
+  }, [isFetchingNextPage]);
+
+  useEffect(() => {
+    if (
+      !isFetchingNextPage &&
+      previousScrollHeightRef.current > 0 &&
+      messagesContainerRef.current
+    ) {
+      const scrollElement = scrollAreaRef.current?.querySelector(
+        '[data-radix-scroll-area-viewport]',
+      );
+      if (scrollElement) {
+        const newScrollHeight = scrollElement.scrollHeight;
+        const scrollDifference =
+          newScrollHeight - previousScrollHeightRef.current;
+        scrollElement.scrollTop += scrollDifference;
+        previousScrollHeightRef.current = 0;
+      }
+    }
+  }, [isFetchingNextPage, allMessages.length]);
+
+  // Intersection Observer for infinite scroll (load older messages when scrolling up)
+  useEffect(() => {
+    if (!hasNextPage || !fetchNextPage || isFetchingNextPage) {
+      return;
+    }
+
+    const scrollElement = scrollAreaRef.current?.querySelector(
+      '[data-radix-scroll-area-viewport]',
+    );
+
+    if (!scrollElement || !loadMoreRef.current) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      {
+        root: scrollElement,
+        rootMargin: '200px', // Start loading 200px before reaching the top
+      },
+    );
+
+    const currentLoadMoreRef = loadMoreRef.current;
+    observer.observe(currentLoadMoreRef);
+
+    return () => {
+      observer.unobserve(currentLoadMoreRef);
+    };
+  }, [hasNextPage, fetchNextPage, isFetchingNextPage]);
 
   const handleSendMessage = () => {
     if (!message.trim()) return;
@@ -85,7 +250,7 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
               <span className="ml-3 text-gray-600">Loading messages...</span>
             </div>
-          ) : messages.length === 0 ? (
+          ) : allMessages.length === 0 ? (
             <div className="text-center py-8">
               <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -94,29 +259,44 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
               <p className="text-gray-500">Start the conversation!</p>
             </div>
           ) : (
-            messages.map((msg, i) => (
-              <div
-                key={msg.id || i}
-                className={`mb-4 ${msg.senderId === userId ? 'text-right' : 'text-left'}`}
-              >
-                <div
-                  className={`text-xs text-gray-500 mb-1 flex items-center gap-1 ${msg.senderId === userId ? 'justify-end' : 'justify-start'}`}
-                >
-                  <User className="w-3 h-3" />
-                  {msg.senderName} •{' '}
-                  {new Date(msg.timestamp).toLocaleTimeString()}
+            <div ref={messagesContainerRef}>
+              {/* Sentinel element for infinite scroll at the top */}
+              {hasNextPage && (
+                <div ref={loadMoreRef} className="flex justify-center py-4">
+                  {isFetchingNextPage && (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                      <span className="ml-2 text-sm text-gray-600">
+                        Loading older messages...
+                      </span>
+                    </div>
+                  )}
                 </div>
+              )}
+              {allMessages.map((msg, i) => (
                 <div
-                  className={`inline-block px-4 py-3 rounded-2xl max-w-xs shadow-sm ${
-                    msg.senderId === userId
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
-                      : 'bg-gray-100 text-gray-800 border border-gray-200'
-                  }`}
+                  key={msg.id || i}
+                  className={`mb-4 ${msg.senderId === userId ? 'text-right' : 'text-left'}`}
                 >
-                  {msg.text}
+                  <div
+                    className={`text-xs text-gray-500 mb-1 flex items-center gap-1 ${msg.senderId === userId ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <User className="w-3 h-3" />
+                    {msg.senderName} •{' '}
+                    {new Date(msg.timestamp).toLocaleTimeString()}
+                  </div>
+                  <div
+                    className={`inline-block px-4 py-3 rounded-2xl max-w-xs shadow-sm ${
+                      msg.senderId === userId
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                        : 'bg-gray-100 text-gray-800 border border-gray-200'
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </ScrollArea>
         <div className="mt-4 space-y-3">
