@@ -7,7 +7,15 @@ import {Textarea} from './ui/textarea';
 import {useSupabaseChat} from '@/hooks/useSupabaseChat';
 import {useAuth} from '@/hooks/useAuth';
 import {useFetchMessagesInfiniteQuery} from '@/hooks/queries/messages/useFetchMessagesInfiniteQuery';
-import {MessageCircle, Users, User, AlertTriangle, Send} from 'lucide-react';
+import {generateConversationSummary} from '@/services/axios/conversations/generateSummary';
+import {
+  MessageCircle,
+  Users,
+  User,
+  AlertTriangle,
+  Send,
+  Sparkles,
+} from 'lucide-react';
 import {ChatMessage} from '@/types/chat';
 
 interface ChatProps {
@@ -17,6 +25,10 @@ interface ChatProps {
 const Chat = ({conversationId = 'default-room'}: ChatProps) => {
   const {userId} = useAuth();
   const [message, setMessage] = useState('');
+  const [summaryMessage, setSummaryMessage] = useState<ChatMessage | null>(
+    null,
+  );
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -86,11 +98,18 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
     });
 
     // Sort by timestamp ascending (oldest first)
-    return Array.from(messageMap.values()).sort(
+    const sortedMessages = Array.from(messageMap.values()).sort(
       (a, b) =>
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     );
-  }, [transformedFetchedMessages, realtimeMessages]);
+
+    // Add summary message at the end if it exists
+    if (summaryMessage) {
+      sortedMessages.push(summaryMessage);
+    }
+
+    return sortedMessages;
+  }, [transformedFetchedMessages, realtimeMessages, summaryMessage]);
 
   // Scroll to bottom on initial load
   useEffect(() => {
@@ -216,6 +235,48 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
     }
   };
 
+  const handleGenerateSummary = async () => {
+    if (!conversationId || isGeneratingSummary || allMessages.length === 0) {
+      return;
+    }
+
+    setIsGeneratingSummary(true);
+    try {
+      const summary = await generateConversationSummary({
+        conversationId,
+      });
+
+      // Create optimistic summary message (always on left side, not from current user)
+      const summaryChatMessage: ChatMessage = {
+        id: `summary-${Date.now()}`,
+        text: summary,
+        senderId: 'ai-summary', // Special ID to identify it's not from a real user
+        senderName: 'AI Summary',
+        timestamp: new Date().toISOString(),
+        conversationId,
+      };
+
+      setSummaryMessage(summaryChatMessage);
+
+      // Auto-scroll to show the summary
+      setTimeout(() => {
+        if (scrollAreaRef.current) {
+          const scrollElement = scrollAreaRef.current.querySelector(
+            '[data-radix-scroll-area-viewport]',
+          );
+          if (scrollElement) {
+            scrollElement.scrollTop = scrollElement.scrollHeight;
+          }
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      // You could add a toast notification here
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
   return (
     <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
       <CardHeader className="justify-center bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
@@ -273,33 +334,64 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
                   )}
                 </div>
               )}
-              {allMessages.map((msg, i) => (
-                <div
-                  key={msg.id || i}
-                  className={`mb-4 ${msg.senderId === userId ? 'text-right' : 'text-left'}`}
-                >
+              {allMessages.map((msg, i) => {
+                const isSummary = msg.senderId === 'ai-summary';
+                const isFromCurrentUser = msg.senderId === userId;
+                return (
                   <div
-                    className={`text-xs text-gray-500 mb-1 flex items-center gap-1 ${msg.senderId === userId ? 'justify-end' : 'justify-start'}`}
+                    key={msg.id || i}
+                    className={`mb-4 ${isFromCurrentUser ? 'text-right' : 'text-left'}`}
                   >
-                    <User className="w-3 h-3" />
-                    {msg.senderName} •{' '}
-                    {new Date(msg.timestamp).toLocaleTimeString()}
+                    <div
+                      className={`text-xs text-gray-500 mb-1 flex items-center gap-1 ${isFromCurrentUser ? 'justify-end' : 'justify-start'}`}
+                    >
+                      {isSummary ? (
+                        <Sparkles className="w-3 h-3" />
+                      ) : (
+                        <User className="w-3 h-3" />
+                      )}
+                      {msg.senderName} •{' '}
+                      {new Date(msg.timestamp).toLocaleTimeString()}
+                    </div>
+                    <div
+                      className={`inline-block px-4 py-3 rounded-2xl max-w-xs shadow-sm ${
+                        isFromCurrentUser
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                          : isSummary
+                            ? 'bg-gradient-to-r from-amber-50 to-orange-50 text-gray-800 border-2 border-amber-200'
+                            : 'bg-gray-100 text-gray-800 border border-gray-200'
+                      }`}
+                    >
+                      {msg.text}
+                    </div>
                   </div>
-                  <div
-                    className={`inline-block px-4 py-3 rounded-2xl max-w-xs shadow-sm ${
-                      msg.senderId === userId
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
-                        : 'bg-gray-100 text-gray-800 border border-gray-200'
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </ScrollArea>
         <div className="mt-4 space-y-3">
+          <div className="flex gap-2">
+            <Button
+              className="flex-1 cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium py-2.5 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleGenerateSummary}
+              disabled={
+                isGeneratingSummary || !isConnected || allMessages.length === 0
+              }
+            >
+              {isGeneratingSummary ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Generating...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Generate Summary
+                </span>
+              )}
+            </Button>
+          </div>
           <Textarea
             placeholder="Write a message..."
             value={message}
