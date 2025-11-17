@@ -14,6 +14,7 @@ import {UserRole} from '@/types/app/register';
 import {useDeleteHelpRequestMutation} from '@/hooks/queries/help-requests/useDeleteHelpRequestMutation';
 import {useChangeClosedStatusMutation} from '@/hooks/queries/help-requests/useChangeClosedStatusMutation';
 import {useAuth} from '@/hooks/useAuth';
+import {useLanguage} from '@/contexts/LanguageContext';
 import {AlertTriangle, Trash2} from 'lucide-react';
 import axios from 'axios';
 import {ApiResponse} from '@/types/app/api';
@@ -33,6 +34,7 @@ const PostChatDeletionDialog = ({
   userRole,
 }: PostChatDeletionDialogProps) => {
   const {userId} = useAuth();
+  const {t} = useLanguage();
   const {mutate: deleteHelpRequest, isPending: isDeleting} =
     useDeleteHelpRequestMutation();
   const {mutate: toggleClosedStatus, isPending: isClosing} =
@@ -94,19 +96,21 @@ const PostChatDeletionDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="w-6 h-6 text-orange-500" />
-            {isUser ? 'Delete Help Request?' : 'Close Help Request?'}
+            {isUser
+              ? t('dialog.deleteRequestTitle')
+              : t('dialog.closeRequestTitle')}
           </DialogTitle>
           <DialogDescription className="text-gray-600">
             {isUser
-              ? 'Would you like to delete the related help request as well?'
-              : 'Would you like to mark this help request as closed?'}
+              ? t('dialog.deleteRequestDescription')
+              : t('dialog.closeRequestDescription')}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm text-gray-600">
             {isUser
-              ? 'The chat has been deleted. You can also delete the associated help request if it is no longer needed.'
-              : 'The chat has been deleted. You can mark the help request as closed if the issue has been resolved.'}
+              ? t('dialog.deleteRequestMessage')
+              : t('dialog.closeRequestMessage')}
           </p>
         </div>
         <DialogFooter className="gap-2">
@@ -118,7 +122,7 @@ const PostChatDeletionDialog = ({
               disabled={isDeleting}
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              {isDeleting ? 'Deleting...' : 'Delete Request'}
+              {isDeleting ? t('dialog.deleting') : t('dialog.deleteRequest')}
             </Button>
           )}
           {isVolunteer && !isRequestClosed && (
@@ -128,7 +132,7 @@ const PostChatDeletionDialog = ({
               onClick={handleCloseRequest}
               disabled={isClosing}
             >
-              {isClosing ? 'Closing...' : 'Close Request'}
+              {isClosing ? t('dialog.closing') : t('dialog.closeRequest')}
             </Button>
           )}
           <Button
@@ -136,7 +140,7 @@ const PostChatDeletionDialog = ({
             className="cursor-pointer bg-gray-500 hover:bg-gray-600 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl border-0"
             onClick={() => onOpenChange(false)}
           >
-            Close
+            {t('card.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

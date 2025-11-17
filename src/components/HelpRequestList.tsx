@@ -3,6 +3,7 @@ import HelpRequestCard from './HelpRequestCard';
 import {HelpRequest} from '@/types/app/api';
 import {FC, useEffect, useRef} from 'react';
 import {FileText} from 'lucide-react';
+import {useLanguage} from '@/contexts/LanguageContext';
 
 interface HelpRequestListProps {
   helpRequests: HelpRequest[];
@@ -19,6 +20,7 @@ const HelpRequestList: FC<HelpRequestListProps> = ({
   isFetchingNextPage,
   fetchNextPage,
 }: HelpRequestListProps) => {
+  const {t} = useLanguage();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Intersection Observer for infinite scroll
@@ -54,7 +56,7 @@ const HelpRequestList: FC<HelpRequestListProps> = ({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading help requests...</span>
+        <span className="ml-3 text-gray-600">{t('list.loading')}</span>
       </div>
     );
   }
@@ -64,9 +66,9 @@ const HelpRequestList: FC<HelpRequestListProps> = ({
       <div className="text-center py-12">
         <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">
-          No help requests found
+          {t('list.noRequests')}
         </h3>
-        <p className="text-gray-500">Be the first to create a help request!</p>
+        <p className="text-gray-500">{t('list.beFirst')}</p>
       </div>
     );
   }
@@ -90,7 +92,7 @@ const HelpRequestList: FC<HelpRequestListProps> = ({
               <div className="flex items-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-sm text-gray-600">
-                  Loading more...
+                  {t('list.loadingMore')}
                 </span>
               </div>
             )}

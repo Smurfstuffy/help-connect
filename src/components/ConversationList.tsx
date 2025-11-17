@@ -16,10 +16,12 @@ import {
   Search,
 } from 'lucide-react';
 import {useDeleteConversationMutation} from '@/hooks/queries/conversations/useDeleteConversationMutation';
+import {useLanguage} from '@/contexts/LanguageContext';
 import PostChatDeletionDialog from './PostChatDeletionDialog';
 
 const ConversationList = () => {
   const {userId} = useAuth();
+  const {t} = useLanguage();
   const {data: currentUser} = useFetchUserQuery(userId ?? '');
   const {mutateAsync: deleteConversation, isPending: isDeleting} =
     useDeleteConversationMutation();
@@ -52,7 +54,9 @@ const ConversationList = () => {
       <>
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading conversations...</span>
+          <span className="ml-3 text-gray-600">
+            {t('conversations.loading')}
+          </span>
         </div>
         <PostChatDeletionDialog
           open={deletedConversation.open}
@@ -72,9 +76,9 @@ const ConversationList = () => {
         <div className="text-center py-12">
           <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Error loading conversations
+            {t('conversations.error')}
           </h3>
-          <p className="text-gray-500">Please try refreshing the page.</p>
+          <p className="text-gray-500">{t('conversations.refresh')}</p>
         </div>
         <PostChatDeletionDialog
           open={deletedConversation.open}
@@ -97,7 +101,7 @@ const ConversationList = () => {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         <Input
           type="text"
-          placeholder="Search by chat title..."
+          placeholder={t('conversations.searchPlaceholder')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className="pl-10 w-full"
@@ -108,19 +112,19 @@ const ConversationList = () => {
         <div className="text-center py-12">
           <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No conversations yet
+            {t('conversations.noConversations')}
           </h3>
           <p className="text-gray-500">
-            Start a conversation by responding to a help request!
+            {t('conversations.startConversation')}
           </p>
         </div>
       ) : !hasFilteredResults ? (
         <div className="text-center py-12">
           <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No conversations found
+            {t('conversations.noResults')}
           </h3>
-          <p className="text-gray-500">Try adjusting your search query.</p>
+          <p className="text-gray-500">{t('conversations.adjustSearch')}</p>
         </div>
       ) : (
         filteredConversations.map((conversation, index) => {
@@ -132,7 +136,7 @@ const ConversationList = () => {
 
           const otherParticipantName = otherParticipant
             ? `${otherParticipant.name || ''} ${otherParticipant.surname || ''}`.trim()
-            : 'Unknown User';
+            : t('conversations.unknownUser');
 
           return (
             <div
@@ -145,19 +149,20 @@ const ConversationList = () => {
                   <CardHeader className="relative">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <MessageCircle className="w-6 h-6" />
-                      {conversation.name || `Chat with ${otherParticipantName}`}
+                      {conversation.name ||
+                        `${t('conversations.chatWith')} ${otherParticipantName}`}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-gray-600 flex items-center gap-2">
                       {currentUser?.role === UserRole.VOLUNTEER
-                        ? 'Helping'
-                        : 'Getting help from'}
+                        ? t('conversations.helping')
+                        : t('conversations.gettingHelp')}
                       : {otherParticipantName}
                     </p>
                     <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      Started:{' '}
+                      {t('conversations.started')}{' '}
                       {new Date(conversation.created_at).toLocaleDateString()}
                     </p>
                   </CardContent>

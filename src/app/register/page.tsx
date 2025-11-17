@@ -22,11 +22,13 @@ import {useForm} from 'react-hook-form';
 import * as z from 'zod';
 import {supabase} from '@/lib/supabase';
 import {useRouter} from 'next/navigation';
+import {useLanguage} from '@/contexts/LanguageContext';
 import {formSchema, UserRole} from '../../types/app/register';
 import {useCreateUserMutation} from '@/hooks/queries/user-profiles/useCreateUserMutation';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const {t} = useLanguage();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,7 +72,7 @@ export default function RegisterPage() {
       router.push('/confirm');
     } catch {
       form.setError('root', {
-        message: 'An unexpected error occurred',
+        message: t('register.unexpectedError'),
       });
     }
   }
@@ -81,15 +83,15 @@ export default function RegisterPage() {
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-normal pb-1">
-              Create your account
+              {t('register.title')}
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600 leading-relaxed">
-              Or{' '}
+              {t('register.subtitle')}{' '}
               <Link
                 href="/login"
                 className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors leading-normal"
               >
-                sign in to your account
+                {t('register.signIn')}
               </Link>
             </p>
           </div>
@@ -100,9 +102,12 @@ export default function RegisterPage() {
                 name="name"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>{t('register.name')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your name" {...field} />
+                      <Input
+                        placeholder={t('register.namePlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -113,9 +118,12 @@ export default function RegisterPage() {
                 name="surname"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Surname</FormLabel>
+                    <FormLabel>{t('register.surname')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your surname" {...field} />
+                      <Input
+                        placeholder={t('register.surnamePlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -126,9 +134,12 @@ export default function RegisterPage() {
                 name="email"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{t('register.email')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your email" {...field} />
+                      <Input
+                        placeholder={t('register.emailPlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -139,11 +150,11 @@ export default function RegisterPage() {
                 name="password"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{t('register.password')}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder={t('register.passwordPlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -156,20 +167,24 @@ export default function RegisterPage() {
                 name="role"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Role</FormLabel>
+                    <FormLabel>{t('register.role')}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select your role" />
+                          <SelectValue
+                            placeholder={t('register.rolePlaceholder')}
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={UserRole.USER}>User</SelectItem>
+                        <SelectItem value={UserRole.USER}>
+                          {t('register.user')}
+                        </SelectItem>
                         <SelectItem value={UserRole.VOLUNTEER}>
-                          Volunteer
+                          {t('register.volunteer')}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -188,8 +203,8 @@ export default function RegisterPage() {
                 disabled={form.formState.isSubmitting}
               >
                 {form.formState.isSubmitting
-                  ? 'Creating account...'
-                  : 'Create account'}
+                  ? t('register.creatingAccount')
+                  : t('register.createAccount')}
               </Button>
             </form>
           </Form>

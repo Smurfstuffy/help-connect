@@ -19,9 +19,11 @@ import {UserRole} from '@/types/app/register';
 import {useChangeClosedStatusMutation} from '@/hooks/queries/help-requests/useChangeClosedStatusMutation';
 import {useCreateConversationFromRequestMutation} from '@/hooks/queries/conversations/useCreateConversationFromRequestMutation';
 import {useDeleteHelpRequestMutation} from '@/hooks/queries/help-requests/useDeleteHelpRequestMutation';
+import {useLanguage} from '@/contexts/LanguageContext';
 import {MapPin, Clipboard, User, Tag, Trash2, AlertCircle} from 'lucide-react';
 
 const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
+  const {t} = useLanguage();
   const [open, setOpen] = useState(false);
   const {data: user} = useFetchUserQuery(helpRequest.user_id ?? '');
   const {userId} = useAuth();
@@ -61,7 +63,7 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clipboard className="w-6 h-6" />
-            Help Request Details
+            {t('card.details')}
           </DialogTitle>
           <DialogDescription className="text-gray-600">
             {helpRequest.description}
@@ -70,25 +72,25 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
         <div className="grid gap-4 py-4">
           <div className="flex flex-wrap gap-2 items-center">
             <User className="w-6 h-6" />
-            <h2 className="font-medium">Request created by:</h2>
+            <h2 className="font-medium">{t('card.createdBy')}</h2>
             <p className="text-gray-600">
               {user?.name} {user?.surname}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 items-center">
             <MapPin className="w-6 h-6" />
-            <h2 className="font-medium">City:</h2>
+            <h2 className="font-medium">{t('card.city')}</h2>
             <p className="text-gray-600">{helpRequest.city}</p>
           </div>
           <div className="flex flex-wrap gap-2 items-center">
             <Tag className="w-6 h-6" />
-            <h2 className="font-medium">Category:</h2>
+            <h2 className="font-medium">{t('card.category')}</h2>
             <p className="text-gray-600">{helpRequest.category}</p>
           </div>
           {helpRequest.urgency && (
             <div className="flex flex-wrap gap-2 items-center">
               <AlertCircle className="w-6 h-6" />
-              <h2 className="font-medium">Urgency:</h2>
+              <h2 className="font-medium">{t('card.urgency')}</h2>
               <p className="text-gray-600">{helpRequest.urgency}</p>
             </div>
           )}
@@ -108,7 +110,9 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
                 }}
                 disabled={isCreatingConversation}
               >
-                {isCreatingConversation ? 'Creating...' : 'Direct Message'}
+                {isCreatingConversation
+                  ? t('card.creating')
+                  : t('card.directMessage')}
               </Button>
               <Button
                 type="button"
@@ -124,10 +128,10 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
                 disabled={isPending}
               >
                 {isPending
-                  ? 'Updating...'
+                  ? t('card.updating')
                   : isClosed
-                    ? 'Activate Request'
-                    : 'Close Request'}
+                    ? t('card.activateRequest')
+                    : t('card.closeRequest')}
               </Button>
             </>
           )}
@@ -142,7 +146,7 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
               disabled={isDeleting}
             >
               <Trash2 className="w-4 h-4" />
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? t('card.deleting') : t('card.delete')}
             </Button>
           )}
           <Button
@@ -150,7 +154,7 @@ const HelpRequestCard = ({helpRequest}: {helpRequest: HelpRequest}) => {
             className="cursor-pointer bg-gray-500 hover:bg-gray-600 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
             onClick={() => setOpen(false)}
           >
-            Close
+            {t('card.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

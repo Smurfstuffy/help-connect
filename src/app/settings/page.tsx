@@ -26,11 +26,13 @@ import {useAuth} from '@/hooks/useAuth';
 import {useEditUserMutation} from '@/hooks/queries/user-profiles/useEditUserMutation';
 import {useRouter} from 'next/navigation';
 import {useEffect} from 'react';
+import {useLanguage} from '@/contexts/LanguageContext';
 import {AlertTriangle, Save} from 'lucide-react';
 
 export default function SettingsPage() {
   const router = useRouter();
   const {userId} = useAuth();
+  const {t} = useLanguage();
   const {data: user, isLoading} = useFetchUserQuery(userId ?? '');
   const editUserMutation = useEditUserMutation();
 
@@ -67,7 +69,7 @@ export default function SettingsPage() {
       }
     } catch {
       form.setError('root', {
-        message: 'Failed to update profile',
+        message: t('settings.updateError'),
       });
     }
   }
@@ -77,7 +79,7 @@ export default function SettingsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="text-gray-600">Loading settings...</span>
+          <span className="text-gray-600">{t('settings.loading')}</span>
         </div>
       </div>
     );
@@ -89,10 +91,10 @@ export default function SettingsPage() {
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-normal pb-1">
-              Settings
+              {t('settings.title')}
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600 leading-relaxed">
-              Update your profile information
+              {t('settings.description')}
             </p>
           </div>
           <Form {...form}>
@@ -103,11 +105,11 @@ export default function SettingsPage() {
                 render={({field}) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      Name
+                      {t('settings.name')}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your name"
+                        placeholder={t('settings.namePlaceholder')}
                         className="focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                         {...field}
                       />
@@ -122,11 +124,11 @@ export default function SettingsPage() {
                 render={({field}) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      Surname
+                      {t('settings.surname')}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your surname"
+                        placeholder={t('settings.surnamePlaceholder')}
                         className="focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                         {...field}
                       />
@@ -141,18 +143,22 @@ export default function SettingsPage() {
                 render={({field}) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      Role
+                      {t('settings.role')}
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
-                          <SelectValue placeholder="Select your role" />
+                          <SelectValue
+                            placeholder={t('settings.rolePlaceholder')}
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={UserRole.USER}>User</SelectItem>
+                        <SelectItem value={UserRole.USER}>
+                          {t('settings.user')}
+                        </SelectItem>
                         <SelectItem value={UserRole.VOLUNTEER}>
-                          Volunteer
+                          {t('settings.volunteer')}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -174,12 +180,12 @@ export default function SettingsPage() {
                 {editUserMutation.isPending ? (
                   <span className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Saving...
+                    {t('settings.saving')}
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
                     <Save className="w-4 h-4" />
-                    Save Changes
+                    {t('settings.saveChanges')}
                   </span>
                 )}
               </Button>

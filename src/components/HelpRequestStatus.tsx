@@ -1,4 +1,8 @@
+'use client';
+import {useLanguage} from '@/contexts/LanguageContext';
+
 const HelpRequestStatus = ({isClosed}: {isClosed: boolean}) => {
+  const {t} = useLanguage();
   return (
     <div
       className={`rounded-lg px-3 py-1 text-sm ${
@@ -7,7 +11,7 @@ const HelpRequestStatus = ({isClosed}: {isClosed: boolean}) => {
           : 'bg-green-100 text-green-700 border border-green-300'
       }`}
     >
-      {isClosed ? 'Closed' : 'Active'}
+      {isClosed ? t('filters.closed') : t('status.active')}
     </div>
   );
 };

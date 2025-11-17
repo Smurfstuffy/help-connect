@@ -43,12 +43,14 @@ import {
   HelpRequestUrgency,
 } from '@/types/app/enums';
 import {parseHelpRequest} from '@/services/axios/help-requests/parseHelpRequest';
+import {useLanguage} from '@/contexts/LanguageContext';
 
 type RequestMode = 'form' | 'ai';
 
 const MIN_AI_TEXT_LENGTH = 20;
 
 const RequestDialog = () => {
+  const {t} = useLanguage();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<RequestMode>('form');
   const [aiText, setAiText] = useState('');
@@ -76,13 +78,16 @@ const RequestDialog = () => {
     const trimmedText = aiText.trim();
 
     if (!trimmedText) {
-      setParseError('Please enter a description of your help request.');
+      setParseError(t('request.parseError'));
       return;
     }
 
     if (trimmedText.length < MIN_AI_TEXT_LENGTH) {
       setParseError(
-        `Please provide at least ${MIN_AI_TEXT_LENGTH} characters with more details about your request.`,
+        t('request.parseErrorMinLength').replace(
+          '{min}',
+          MIN_AI_TEXT_LENGTH.toString(),
+        ),
       );
       return;
     }
@@ -118,9 +123,7 @@ const RequestDialog = () => {
       setMode('form');
       setAiText('');
     } catch {
-      setParseError(
-        'Failed to process your request. Please try again or use the form instead.',
-      );
+      setParseError(t('request.parseErrorFailed'));
     } finally {
       setIsParsing(false);
     }
@@ -156,7 +159,7 @@ const RequestDialog = () => {
         <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-10 px-4 py-2 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200">
           <span className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
-            Create Request
+            {t('request.createRequest')}
           </span>
         </button>
       </DialogTrigger>
@@ -164,12 +167,12 @@ const RequestDialog = () => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="w-6 h-6" />
-            Create a New Help Request
+            {t('request.createNew')}
           </DialogTitle>
           <DialogDescription className="text-gray-600">
             {mode === 'form'
-              ? 'Fill out the form below or use AI to describe your request.'
-              : 'Describe your help request in natural language, and AI will extract the details.'}
+              ? t('request.formDescription')
+              : t('request.aiDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -185,7 +188,7 @@ const RequestDialog = () => {
             className="flex-1 cursor-pointer"
           >
             <Edit className="w-4 h-4 mr-2" />
-            Form
+            {t('request.form')}
           </Button>
           <Button
             type="button"
@@ -197,7 +200,7 @@ const RequestDialog = () => {
             className="flex-1 cursor-pointer"
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            AI Text
+            {t('request.aiText')}
           </Button>
         </div>
 
@@ -206,11 +209,11 @@ const RequestDialog = () => {
             <div className="grid gap-2.5">
               <Label htmlFor="ai-text" className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4" />
-                Describe Your Request
+                {t('request.describeRequest')}
               </Label>
               <textarea
                 id="ai-text"
-                placeholder="Example: We need help with transporting things for displaced people from Lviv to Drohobych by the end of the week"
+                placeholder={t('request.aiPlaceholder')}
                 className="border rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none min-h-[120px]"
                 value={aiText}
                 onChange={e => {
@@ -226,9 +229,10 @@ const RequestDialog = () => {
                       : 'text-green-600'
                   }
                 >
-                  {aiText.trim().length} / {MIN_AI_TEXT_LENGTH} characters
+                  {aiText.trim().length} / {MIN_AI_TEXT_LENGTH}{' '}
+                  {t('request.characters')}
                   {aiText.trim().length < MIN_AI_TEXT_LENGTH &&
-                    ` (${MIN_AI_TEXT_LENGTH - aiText.trim().length} more needed)`}
+                    ` (${MIN_AI_TEXT_LENGTH - aiText.trim().length} ${t('request.moreNeeded')})`}
                 </span>
               </div>
               {parseError && (
@@ -251,12 +255,12 @@ const RequestDialog = () => {
               {isParsing ? (
                 <span className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Processing...
+                  {t('request.processing')}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  Parse with AI
+                  {t('request.parseWithAI')}
                 </span>
               )}
             </Button>
@@ -267,25 +271,25 @@ const RequestDialog = () => {
               <div className="grid gap-2.5">
                 <Label htmlFor="city" className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  City
+                  {t('request.city')}
                 </Label>
                 <Input
                   id="city"
-                  placeholder="Enter your city"
+                  placeholder={t('request.enterCity')}
                   className="focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   {...register('city', {required: true})}
                 />
                 {errors.city && (
                   <span className="text-red-500 text-xs flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    City is required
+                    {t('request.cityRequired')}
                   </span>
                 )}
               </div>
               <div className="grid gap-2.5">
                 <Label htmlFor="category" className="flex items-center gap-2">
                   <Tag className="w-4 h-4" />
-                  Category
+                  {t('request.category')}
                 </Label>
                 <Select
                   value={watch('category')}
@@ -301,7 +305,7 @@ const RequestDialog = () => {
                     id="category"
                     className="w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   >
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder={t('request.selectCategory')} />
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORY_OPTIONS.map(category => (
@@ -314,14 +318,14 @@ const RequestDialog = () => {
                 {errors.category && (
                   <span className="text-red-500 text-xs flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    {errors.category.message || 'Category is required'}
+                    {errors.category.message || t('request.categoryRequired')}
                   </span>
                 )}
               </div>
               <div className="grid gap-2.5">
                 <Label htmlFor="urgency" className="flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
-                  Urgency
+                  {t('request.urgency')}
                 </Label>
                 <Select
                   value={watch('urgency') || HELP_REQUEST_URGENCY.MEDIUM}
@@ -337,7 +341,7 @@ const RequestDialog = () => {
                     id="urgency"
                     className="w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   >
-                    <SelectValue placeholder="Select urgency level" />
+                    <SelectValue placeholder={t('request.selectUrgency')} />
                   </SelectTrigger>
                   <SelectContent>
                     {URGENCY_OPTIONS.map(urgency => (
@@ -350,7 +354,7 @@ const RequestDialog = () => {
                 {errors.urgency && (
                   <span className="text-red-500 text-xs flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    {errors.urgency.message || 'Urgency is required'}
+                    {errors.urgency.message || t('request.urgencyRequired')}
                   </span>
                 )}
               </div>
@@ -360,11 +364,11 @@ const RequestDialog = () => {
                   className="flex items-center gap-2"
                 >
                   <FileText className="w-4 h-4" />
-                  Description
+                  {t('request.description')}
                 </Label>
                 <textarea
                   id="description"
-                  placeholder="Describe your request in detail..."
+                  placeholder={t('request.describeDetail')}
                   className="border rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
                   rows={4}
                   {...register('description', {required: true})}
@@ -372,7 +376,7 @@ const RequestDialog = () => {
                 {errors.description && (
                   <span className="text-red-500 text-xs flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    Description is required
+                    {t('request.descriptionRequired')}
                   </span>
                 )}
               </div>
@@ -385,12 +389,12 @@ const RequestDialog = () => {
               {isPending ? (
                 <span className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Submitting...
+                  {t('request.submitting')}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
                   <Check className="w-4 h-4" />
-                  Submit Request
+                  {t('request.submitRequest')}
                 </span>
               )}
             </Button>

@@ -47,6 +47,8 @@ export async function GET(request: NextRequest) {
   try {
     const {searchParams} = new URL(request.url);
     const conversationId = searchParams.get('conversationId');
+    const offset = searchParams.get('offset');
+    const limit = searchParams.get('limit');
 
     if (!conversationId) {
       return NextResponse.json(
@@ -56,7 +58,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch messages for the conversation with user details
-    const {data, error} = await supabaseAdmin
+    // Order by created_at DESC (most recent first) for reverse pagination
+    let query = supabaseAdmin
       .from('messages')
       .select(
         `
@@ -68,7 +71,20 @@ export async function GET(request: NextRequest) {
       `,
       )
       .eq('conversation_id', conversationId)
-      .order('created_at', {ascending: true});
+      .order('created_at', {ascending: false});
+
+    // Apply pagination if provided
+    if (offset !== null && limit !== null) {
+      const offsetNum = parseInt(offset, 10);
+      const limitNum = parseInt(limit, 10);
+      if (!isNaN(offsetNum) && !isNaN(limitNum)) {
+        const from = offsetNum;
+        const to = offsetNum + limitNum - 1;
+        query = query.range(from, to);
+      }
+    }
+
+    const {data, error} = await query;
 
     if (error) {
       console.error('Error fetching messages:', error);
