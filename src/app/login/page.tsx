@@ -15,10 +15,12 @@ import {useForm} from 'react-hook-form';
 import * as z from 'zod';
 import {supabase} from '@/lib/supabase';
 import {useRouter} from 'next/navigation';
+import {useLanguage} from '@/contexts/LanguageContext';
 import {formSchema} from '../../types/app/login';
 
 export default function LoginPage() {
   const router = useRouter();
+  const {t} = useLanguage();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -44,7 +46,7 @@ export default function LoginPage() {
       router.push('/');
     } catch {
       form.setError('root', {
-        message: 'An unexpected error occurred',
+        message: t('login.unexpectedError'),
       });
     }
   }
@@ -55,15 +57,15 @@ export default function LoginPage() {
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-normal pb-1">
-              Sign in to your account
+              {t('login.title')}
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600 leading-relaxed">
-              Or{' '}
+              {t('login.subtitle')}{' '}
               <Link
                 href="/register"
                 className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors leading-normal"
               >
-                create a new account
+                {t('login.createAccount')}
               </Link>
             </p>
           </div>
@@ -74,9 +76,12 @@ export default function LoginPage() {
                 name="email"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{t('login.email')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your email" {...field} />
+                      <Input
+                        placeholder={t('login.emailPlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -87,11 +92,11 @@ export default function LoginPage() {
                 name="password"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{t('login.password')}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder={t('login.passwordPlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -109,7 +114,9 @@ export default function LoginPage() {
                 className="w-full cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2.5 transition-all duration-200 shadow-lg hover:shadow-xl"
                 disabled={form.formState.isSubmitting}
               >
-                {form.formState.isSubmitting ? 'Signing in...' : 'Sign in'}
+                {form.formState.isSubmitting
+                  ? t('login.signingIn')
+                  : t('login.signIn')}
               </Button>
             </form>
           </Form>

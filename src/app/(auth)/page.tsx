@@ -6,11 +6,13 @@ import HelpRequestFilters from '@/components/HelpRequestFilters';
 import {useFetchHelpRequestsInfiniteQuery} from '@/hooks/queries/help-requests/useFetchHelpRequestsInfiniteQuery';
 import {useAuth} from '@/hooks/useAuth';
 import {useFetchUserQuery} from '@/hooks/queries/user-profiles/useFetchUserQuery';
+import {useLanguage} from '@/contexts/LanguageContext';
 import {UserRole} from '@/types/app/register';
 import {HelpRequestFilters as HelpRequestFiltersType} from '@/services/supabase/help-request/fetch';
 
 export default function Home() {
   const {userId} = useAuth();
+  const {t} = useLanguage();
   const {data: user, isLoading: isUserLoading} = useFetchUserQuery(
     userId ?? '',
   );
@@ -38,8 +40,7 @@ export default function Home() {
         </h1>
         {isUserLoading ? (
           <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed animate-pulse">
-            Connect with volunteers and get the help you need, or offer your
-            assistance to those in need.
+            {t('home.description')}
           </p>
         ) : user?.role === UserRole.USER ? (
           <div className="flex justify-center min-h-[40px] transition-all duration-300">
@@ -49,8 +50,7 @@ export default function Home() {
           </div>
         ) : (
           <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed opacity-0 animate-[fadeIn_0.3s_ease-in-out_0.1s_forwards]">
-            Connect with volunteers and get the help you need, or offer your
-            assistance to those in need.
+            {t('home.description')}
           </p>
         )}
       </div>

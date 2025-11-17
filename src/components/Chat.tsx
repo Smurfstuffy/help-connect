@@ -7,15 +7,14 @@ import {Textarea} from './ui/textarea';
 import {useSupabaseChat} from '@/hooks/useSupabaseChat';
 import {useAuth} from '@/hooks/useAuth';
 import {useFetchMessagesInfiniteQuery} from '@/hooks/queries/messages/useFetchMessagesInfiniteQuery';
+import {useFetchConversationByIdServiceQuery} from '@/hooks/queries/conversations/useFetchConversationByIdServiceQuery';
 import {generateConversationSummary} from '@/services/axios/conversations/generateSummary';
-import {
-  MessageCircle,
-  Users,
-  User,
-  AlertTriangle,
-  Send,
-  Sparkles,
-} from 'lucide-react';
+import {translateMessage} from '@/services/axios/messages/translateMessage';
+import {TranslationLanguage} from '@/services/openai/messages/translateMessage';
+import {useLanguage} from '@/contexts/LanguageContext';
+import {useFetchUserQuery} from '@/hooks/queries/user-profiles/useFetchUserQuery';
+import {UserRole} from '@/types/app/register';
+import {MessageCircle, User, AlertTriangle, Send, Sparkles} from 'lucide-react';
 import {ChatMessage} from '@/types/chat';
 
 interface ChatProps {
@@ -24,11 +23,21 @@ interface ChatProps {
 
 const Chat = ({conversationId = 'default-room'}: ChatProps) => {
   const {userId} = useAuth();
+  const {language: appLanguage, t} = useLanguage();
+  const {data: currentUser} = useFetchUserQuery(userId ?? '');
+  const {data: conversation} =
+    useFetchConversationByIdServiceQuery(conversationId);
   const [message, setMessage] = useState('');
   const [summaryMessage, setSummaryMessage] = useState<ChatMessage | null>(
     null,
   );
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  // Map of messageId -> translatedText (only stores when translated)
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  // Map of messageId -> boolean (is translating)
+  const [translatingMessages, setTranslatingMessages] = useState<
+    Record<string, boolean>
+  >({});
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -66,7 +75,6 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
   const {
     messages: realtimeMessages,
     isConnected,
-    onlineUsers,
     sendMessage: sendChatMessage,
   } = useSupabaseChat({conversationId, skipInitialLoad: true});
 
@@ -111,6 +119,17 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
     return sortedMessages;
   }, [transformedFetchedMessages, realtimeMessages, summaryMessage]);
 
+  // Get display text for a message (original or translated)
+  const getMessageText = (messageId: string, originalText: string): string => {
+    const translation = translations[messageId];
+    return translation || originalText;
+  };
+
+  // Check if message is translated
+  const isMessageTranslated = (messageId: string): boolean => {
+    return !!translations[messageId];
+  };
+
   // Scroll to bottom on initial load
   useEffect(() => {
     if (
@@ -121,7 +140,7 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
       setTimeout(() => {
         if (scrollAreaRef.current) {
           const scrollElement = scrollAreaRef.current.querySelector(
-            '[data-radix-scroll-area-viewport]',
+            '[data-slot="scroll-area-viewport"]',
           );
           if (scrollElement) {
             scrollElement.scrollTop = scrollElement.scrollHeight;
@@ -140,7 +159,7 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
       scrollAreaRef.current
     ) {
       const scrollElement = scrollAreaRef.current.querySelector(
-        '[data-radix-scroll-area-viewport]',
+        '[data-slot="scroll-area-viewport"]',
       );
       if (scrollElement) {
         // Only auto-scroll if user is near the bottom (within 100px)
@@ -277,100 +296,177 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
     }
   };
 
+  const handleTranslateMessage = async (
+    messageId: string,
+    originalText: string,
+  ) => {
+    // If already translated, remove translation (show original)
+    if (translations[messageId]) {
+      setTranslations(prev => {
+        const newTranslations = {...prev};
+        delete newTranslations[messageId];
+        return newTranslations;
+      });
+      return;
+    }
+
+    // Determine target language based on app language
+    // If app is Ukrainian, translate to Ukrainian; if English, translate to English
+    const targetLanguage: TranslationLanguage =
+      appLanguage === 'ua' ? 'ukrainian' : 'english';
+
+    setTranslatingMessages(prev => ({...prev, [messageId]: true}));
+
+    try {
+      const translatedText = await translateMessage({
+        text: originalText,
+        targetLanguage,
+      });
+
+      // Optimistically update the translation
+      setTranslations(prev => ({
+        ...prev,
+        [messageId]: translatedText,
+      }));
+    } catch (error) {
+      console.error('Error translating message:', error);
+      // You could add a toast notification here
+    } finally {
+      setTranslatingMessages(prev => {
+        const newTranslating = {...prev};
+        delete newTranslating[messageId];
+        return newTranslating;
+      });
+    }
+  };
+
+  // Get conversation title or fallback
+  const conversationTitle = conversation?.name
+    ? conversation.name
+    : conversation && currentUser
+      ? (() => {
+          const otherParticipant =
+            currentUser.role === UserRole.VOLUNTEER
+              ? conversation.user_profiles
+              : conversation.volunteer_profiles;
+          const otherParticipantName = otherParticipant
+            ? `${otherParticipant.name || ''} ${otherParticipant.surname || ''}`.trim()
+            : t('conversations.unknownUser');
+          return `${t('conversations.chatWith')} ${otherParticipantName}`;
+        })()
+      : t('chat.title');
+
   return (
-    <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-      <CardHeader className="justify-center bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
-        <CardTitle className="flex items-center justify-between">
+    <Card className="shadow-lg border-0 bg-white/60 backdrop-blur-sm rounded-2xl h-full flex flex-col">
+      <CardHeader className="justify-center flex-shrink-0">
+        <CardTitle className="flex items-center justify-center">
           <span className="flex items-center gap-2">
             <MessageCircle className="w-6 h-6" />
-            Chat
+            {conversationTitle}
           </span>
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-3 h-3 rounded-full ${
-                isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-              }`}
-            />
-            <span className="text-sm text-gray-600 font-medium">
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
-          </div>
         </CardTitle>
-        {onlineUsers.length > 0 && (
-          <div className="text-sm text-gray-600 flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            {onlineUsers.length} user{onlineUsers.length !== 1 ? 's' : ''}{' '}
-            online
-          </div>
-        )}
       </CardHeader>
-      <CardContent>
-        <ScrollArea ref={scrollAreaRef} className="h-96">
-          {isLoadingMessages ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">Loading messages...</span>
-            </div>
-          ) : allMessages.length === 0 ? (
-            <div className="text-center py-8">
-              <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No messages yet
-              </h3>
-              <p className="text-gray-500">Start the conversation!</p>
-            </div>
-          ) : (
-            <div ref={messagesContainerRef}>
-              {/* Sentinel element for infinite scroll at the top */}
-              {hasNextPage && (
-                <div ref={loadMoreRef} className="flex justify-center py-4">
-                  {isFetchingNextPage && (
-                    <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                      <span className="ml-2 text-sm text-gray-600">
-                        Loading older messages...
-                      </span>
+      <CardContent className="flex-1 flex flex-col min-h-0 p-0">
+        <div className="flex-1 min-h-0 px-8">
+          <ScrollArea
+            ref={scrollAreaRef}
+            className="h-full bg-gray-100 rounded-lg"
+          >
+            <div className="p-4">
+              {isLoadingMessages ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">
+                    {t('chat.loadingMessages')}
+                  </span>
+                </div>
+              ) : allMessages.length === 0 ? (
+                <div className="text-center py-8">
+                  <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {t('chat.noMessages')}
+                  </h3>
+                  <p className="text-gray-500">{t('chat.startConversation')}</p>
+                </div>
+              ) : (
+                <div ref={messagesContainerRef}>
+                  {/* Sentinel element for infinite scroll at the top */}
+                  {hasNextPage && (
+                    <div ref={loadMoreRef} className="flex justify-center py-4">
+                      {isFetchingNextPage && (
+                        <div className="flex items-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                          <span className="ml-2 text-sm text-gray-600">
+                            {t('chat.loadingOlder')}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
+                  {allMessages.map((msg, i) => {
+                    const isSummary = msg.senderId === 'ai-summary';
+                    const isFromCurrentUser = msg.senderId === userId;
+                    const displayText = getMessageText(msg.id, msg.text);
+                    const isTranslating = translatingMessages[msg.id];
+                    const isTranslated = isMessageTranslated(msg.id);
+
+                    return (
+                      <div
+                        key={msg.id || i}
+                        className={`mb-4 ${isFromCurrentUser ? 'text-right' : 'text-left'}`}
+                      >
+                        <div
+                          className={`text-xs text-gray-500 mb-1 flex items-center gap-1 ${isFromCurrentUser ? 'justify-end' : 'justify-start'}`}
+                        >
+                          {isSummary ? (
+                            <Sparkles className="w-3 h-3" />
+                          ) : (
+                            <User className="w-3 h-3" />
+                          )}
+                          {msg.senderName} •{' '}
+                          {new Date(msg.timestamp).toLocaleTimeString()}
+                        </div>
+                        <div
+                          className={`inline-block px-4 py-3 rounded-2xl max-w-xs shadow-sm ${
+                            isFromCurrentUser
+                              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                              : isSummary
+                                ? 'bg-gradient-to-r from-amber-50 to-orange-50 text-gray-800 border-2 border-amber-200'
+                                : 'bg-gray-100 text-gray-800 border border-gray-200'
+                          }`}
+                        >
+                          {displayText}
+                        </div>
+                        {/* Translation link for messages from other users */}
+                        {!isFromCurrentUser && !isSummary && (
+                          <div>
+                            {isTranslating ? (
+                              <span className="text-xs text-gray-400">
+                                {t('chat.translating')}...
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() =>
+                                  handleTranslateMessage(msg.id, msg.text)
+                                }
+                                className="text-xs text-gray-500 hover:text-gray-700 underline cursor-pointer transition-colors"
+                              >
+                                {isTranslated
+                                  ? t('chat.showOriginal')
+                                  : t('chat.translate')}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
-              {allMessages.map((msg, i) => {
-                const isSummary = msg.senderId === 'ai-summary';
-                const isFromCurrentUser = msg.senderId === userId;
-                return (
-                  <div
-                    key={msg.id || i}
-                    className={`mb-4 ${isFromCurrentUser ? 'text-right' : 'text-left'}`}
-                  >
-                    <div
-                      className={`text-xs text-gray-500 mb-1 flex items-center gap-1 ${isFromCurrentUser ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {isSummary ? (
-                        <Sparkles className="w-3 h-3" />
-                      ) : (
-                        <User className="w-3 h-3" />
-                      )}
-                      {msg.senderName} •{' '}
-                      {new Date(msg.timestamp).toLocaleTimeString()}
-                    </div>
-                    <div
-                      className={`inline-block px-4 py-3 rounded-2xl max-w-xs shadow-sm ${
-                        isFromCurrentUser
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
-                          : isSummary
-                            ? 'bg-gradient-to-r from-amber-50 to-orange-50 text-gray-800 border-2 border-amber-200'
-                            : 'bg-gray-100 text-gray-800 border border-gray-200'
-                      }`}
-                    >
-                      {msg.text}
-                    </div>
-                  </div>
-                );
-              })}
             </div>
-          )}
-        </ScrollArea>
-        <div className="mt-4 space-y-3">
+          </ScrollArea>
+        </div>
+        <div className="px-8 pb-4 pt-4 space-y-3 flex-shrink-0">
           <div className="flex gap-2">
             <Button
               className="flex-1 cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium py-2.5 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
@@ -382,18 +478,18 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
               {isGeneratingSummary ? (
                 <span className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Generating...
+                  {t('chat.generating')}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  Generate Summary
+                  {t('chat.generateSummary')}
                 </span>
               )}
             </Button>
           </div>
           <Textarea
-            placeholder="Write a message..."
+            placeholder={t('chat.writeMessage')}
             value={message}
             onChange={e => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -408,12 +504,12 @@ const Chat = ({conversationId = 'default-room'}: ChatProps) => {
             {!isConnected ? (
               <span className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
-                Disconnected
+                {t('chat.disconnected')}
               </span>
             ) : (
               <span className="flex items-center gap-2">
                 <Send className="w-4 h-4" />
-                Send Message
+                {t('chat.sendMessage')}
               </span>
             )}
           </Button>

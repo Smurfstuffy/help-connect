@@ -11,6 +11,7 @@ import {
 } from './ui/select';
 import {Button} from './ui/button';
 import {Search, X, Filter} from 'lucide-react';
+import {useLanguage} from '@/contexts/LanguageContext';
 import {CATEGORY_OPTIONS, URGENCY_OPTIONS} from '@/types/app/enums';
 import {HelpRequestFilters} from '@/services/supabase/help-request/fetch';
 
@@ -23,6 +24,7 @@ const HelpRequestFiltersComponent = ({
   filters,
   onFiltersChange,
 }: HelpRequestFiltersProps) => {
+  const {t} = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const updateFilter = (
@@ -45,7 +47,7 @@ const HelpRequestFiltersComponent = ({
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         <Input
           type="text"
-          placeholder="Search by city, category, urgency, or description..."
+          placeholder={t('filters.searchPlaceholder')}
           value={filters.search || ''}
           onChange={e => updateFilter('search', e.target.value || undefined)}
           className="pl-12 w-full"
@@ -61,7 +63,7 @@ const HelpRequestFiltersComponent = ({
             className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
           >
             <Filter className="w-4 h-4" />
-            {isExpanded ? 'Hide Filters' : 'Show Filters'}
+            {isExpanded ? t('filters.hideFilters') : t('filters.showFilters')}
             {hasActiveFilters && (
               <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
                 {Object.keys(filters).filter(k => k !== 'search').length}
@@ -77,7 +79,7 @@ const HelpRequestFiltersComponent = ({
               className="text-xs text-gray-600 hover:text-gray-900"
             >
               <X className="w-3 h-3 mr-1" />
-              Clear All
+              {t('filters.clearAll')}
             </Button>
           )}
         </div>
@@ -87,7 +89,7 @@ const HelpRequestFiltersComponent = ({
             {/* Category Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                Category
+                {t('filters.category')}
               </label>
               <Select
                 value={filters.category}
@@ -96,7 +98,7 @@ const HelpRequestFiltersComponent = ({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Categories" />
+                  <SelectValue placeholder={t('filters.allCategories')} />
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORY_OPTIONS.map(category => (
@@ -111,7 +113,7 @@ const HelpRequestFiltersComponent = ({
             {/* Urgency Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                Urgency
+                {t('filters.urgency')}
               </label>
               <Select
                 value={filters.urgency}
@@ -120,7 +122,7 @@ const HelpRequestFiltersComponent = ({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Urgency Levels" />
+                  <SelectValue placeholder={t('filters.allUrgencyLevels')} />
                 </SelectTrigger>
                 <SelectContent>
                   {URGENCY_OPTIONS.map(urgency => (
@@ -135,7 +137,7 @@ const HelpRequestFiltersComponent = ({
             {/* Status Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                Status
+                {t('filters.status')}
               </label>
               <Select
                 value={
@@ -150,21 +152,23 @@ const HelpRequestFiltersComponent = ({
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Status" />
+                  <SelectValue placeholder={t('filters.allStatus')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="open">Open</SelectItem>
-                  <SelectItem value="closed">Closed</SelectItem>
+                  <SelectItem value="open">{t('filters.open')}</SelectItem>
+                  <SelectItem value="closed">{t('filters.closed')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* City Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">City</label>
+              <label className="text-sm font-medium text-gray-700">
+                {t('filters.city')}
+              </label>
               <Input
                 type="text"
-                placeholder="Filter by city..."
+                placeholder={t('filters.filterByCity')}
                 value={filters.city || ''}
                 onChange={e =>
                   updateFilter('city', e.target.value || undefined)
@@ -175,7 +179,7 @@ const HelpRequestFiltersComponent = ({
             {/* Date Range Filters */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                From Date
+                {t('filters.fromDate')}
               </label>
               <Input
                 type="date"
@@ -188,7 +192,7 @@ const HelpRequestFiltersComponent = ({
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                To Date
+                {t('filters.toDate')}
               </label>
               <Input
                 type="date"
