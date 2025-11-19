@@ -2,18 +2,29 @@
 import {Button} from '@/components/ui/button';
 import {supabase} from '@/lib/supabase';
 import Link from 'next/link';
-import {useRouter} from 'next/navigation';
+import {useRouter, usePathname} from 'next/navigation';
 import {useFetchUserQuery} from '@/hooks/queries/user-profiles/useFetchUserQuery';
 import {useAuth} from '@/hooks/useAuth';
 import {useLanguage} from '@/contexts/LanguageContext';
 import {UserRole} from '@/types/app/register';
+import Chatbot from '@/components/Chatbot';
 
 export default function AuthLayout({children}: {children: React.ReactNode}) {
   const router = useRouter();
+  const pathname = usePathname();
   const {userId} = useAuth();
   const {language, setLanguage, t} = useLanguage();
 
   const {data: user} = useFetchUserQuery(userId ?? '');
+
+  // Check if we're on a chat page (should not show chatbot there)
+  const isChatPage = pathname?.startsWith('/chats/') && pathname !== '/chats';
+
+  // Show chatbot only for USER and VOLUNTEER roles, and not on individual chat pages
+  const shouldShowChatbot =
+    user &&
+    (user.role === UserRole.USER || user.role === UserRole.VOLUNTEER) &&
+    !isChatPage;
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -95,6 +106,7 @@ export default function AuthLayout({children}: {children: React.ReactNode}) {
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 overflow-hidden flex flex-col min-h-0">
         {children}
       </main>
+      {shouldShowChatbot && <Chatbot />}
     </div>
   );
 }

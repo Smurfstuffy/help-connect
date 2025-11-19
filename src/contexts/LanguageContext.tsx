@@ -198,6 +198,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     'register.createAccount': 'Create account',
     'register.creatingAccount': 'Creating account...',
     'register.unexpectedError': 'An unexpected error occurred',
+    // Chatbot
+    'chatbot.title': 'AI Assistant',
+    'chatbot.welcome':
+      "Hello! I'm your AI assistant for Help Connect. How can I help you today?",
+    'chatbot.placeholder': 'Type your message...',
+    'chatbot.open': 'Open chatbot',
+    'chatbot.close': 'Close chatbot',
+    'chatbot.error': 'Sorry, I encountered an error. Please try again.',
   },
   ua: {
     // Navigation
@@ -382,6 +390,14 @@ const translations: Record<AppLanguage, Record<string, string>> = {
     'register.createAccount': 'Створити обліковий запис',
     'register.creatingAccount': 'Створення облікового запису...',
     'register.unexpectedError': 'Сталася неочікувана помилка',
+    // Chatbot
+    'chatbot.title': 'AI Асистент',
+    'chatbot.welcome':
+      'Привіт! Я ваш AI асистент для Help Connect. Чим можу допомогти?',
+    'chatbot.placeholder': 'Введіть ваше повідомлення...',
+    'chatbot.open': 'Відкрити чат-бот',
+    'chatbot.close': 'Закрити чат-бот',
+    'chatbot.error': 'Вибачте, сталася помилка. Будь ласка, спробуйте ще раз.',
   },
 };
 
