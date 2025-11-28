@@ -1,4 +1,3 @@
-import {ScrollArea} from './ui/scroll-area';
 import HelpRequestCard from './HelpRequestCard';
 import {HelpRequest} from '@/types/app/api';
 import {FC, useEffect, useRef} from 'react';
@@ -29,6 +28,10 @@ const HelpRequestList: FC<HelpRequestListProps> = ({
       return;
     }
 
+    if (!loadMoreRef.current) {
+      return;
+    }
+
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting) {
@@ -36,19 +39,16 @@ const HelpRequestList: FC<HelpRequestListProps> = ({
         }
       },
       {
+        root: null, // Use viewport as root for page-level scrolling
         rootMargin: '200px', // Start loading 200px before reaching the bottom
       },
     );
 
     const currentRef = loadMoreRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
+    observer.observe(currentRef);
 
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
+      observer.unobserve(currentRef);
     };
   }, [hasNextPage, fetchNextPage, isFetchingNextPage]);
 
@@ -74,32 +74,30 @@ const HelpRequestList: FC<HelpRequestListProps> = ({
   }
 
   return (
-    <ScrollArea className="h-full flex flex-col w-full">
-      <div className="flex flex-col gap-4 pb-4 px-4">
-        {helpRequests?.map((helpRequest, index) => (
-          <div
-            key={helpRequest.id}
-            className="animate-fade-in"
-            style={{animationDelay: `${index * 0.1}s`}}
-          >
-            <HelpRequestCard helpRequest={helpRequest} />
-          </div>
-        ))}
-        {/* Sentinel element for infinite scroll */}
-        {hasNextPage && (
-          <div ref={loadMoreRef} className="flex justify-center py-4">
-            {isFetchingNextPage && (
-              <div className="flex items-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-sm text-gray-600">
-                  {t('list.loadingMore')}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </ScrollArea>
+    <div className="flex flex-col gap-4">
+      {helpRequests?.map((helpRequest, index) => (
+        <div
+          key={helpRequest.id}
+          className="animate-fade-in"
+          style={{animationDelay: `${index * 0.1}s`}}
+        >
+          <HelpRequestCard helpRequest={helpRequest} />
+        </div>
+      ))}
+      {/* Sentinel element for infinite scroll */}
+      {hasNextPage && (
+        <div ref={loadMoreRef} className="flex justify-center py-4">
+          {isFetchingNextPage && (
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <span className="ml-2 text-sm text-gray-600">
+                {t('list.loadingMore')}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 

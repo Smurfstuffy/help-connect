@@ -103,7 +103,7 @@ export default function AuthLayout({children}: {children: React.ReactNode}) {
           </div>
         </div>
       </nav>
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 overflow-hidden flex flex-col min-h-0">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 overflow-y-auto flex flex-col min-h-0 py-8">
         {children}
       </main>
       {shouldShowChatbot && <Chatbot />}
