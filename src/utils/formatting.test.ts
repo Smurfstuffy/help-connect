@@ -155,4 +155,3 @@ describe('formatting utilities', () => {
     });
   });
 });
-

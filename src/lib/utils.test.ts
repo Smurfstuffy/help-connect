@@ -51,4 +51,3 @@ describe('cn utility function', () => {
     expect(result).not.toContain('hidden');
   });
 });
-

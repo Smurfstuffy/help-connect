@@ -28,9 +28,10 @@ export function formatDate(
   date: Date | string | number,
   locale: string = 'en-US',
 ): string {
-  const dateObj = typeof date === 'string' || typeof date === 'number'
-    ? new Date(date)
-    : date;
+  const dateObj =
+    typeof date === 'string' || typeof date === 'number'
+      ? new Date(date)
+      : date;
 
   if (isNaN(dateObj.getTime())) {
     return 'Invalid Date';
@@ -45,9 +46,10 @@ export function formatDate(
  * @returns A relative time string
  */
 export function formatRelativeTime(date: Date | string | number): string {
-  const dateObj = typeof date === 'string' || typeof date === 'number'
-    ? new Date(date)
-    : date;
+  const dateObj =
+    typeof date === 'string' || typeof date === 'number'
+      ? new Date(date)
+      : date;
 
   if (isNaN(dateObj.getTime())) {
     return 'Invalid Date';
@@ -103,4 +105,3 @@ export function truncateText(text: string, maxLength: number): string {
 
   return `${text.slice(0, maxLength)}...`;
 }
-
